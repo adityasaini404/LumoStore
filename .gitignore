@@ -2,7 +2,15 @@
 *.apk
 *.aab
 *.aar
+<<<<<<< HEAD
 *.dex
+=======
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+>>>>>>> e2113b5d94ffd24443015b9e21882a33c3b7780d
 *.class
 
 # Generated files
@@ -14,6 +22,7 @@ out/
 .gradle/
 build/
 
+<<<<<<< HEAD
 # Local configuration
 local.properties
 
@@ -23,6 +32,21 @@ local.properties
 # Android Studio
 .navigation/
 captures/
+=======
+# Local configuration file (SDK path, etc.)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ / Android Studio
+>>>>>>> e2113b5d94ffd24443015b9e21882a33c3b7780d
 *.iml
 .idea/
 
@@ -31,11 +55,19 @@ captures/
 *.keystore
 keystore.properties
 
+<<<<<<< HEAD
 # External native build
 .externalNativeBuild/
 .cxx/
 
 # Google Services
+=======
+# External native build folder
+.externalNativeBuild/
+.cxx/
+
+# Google Services (e.g. APIs or Firebase)
+>>>>>>> e2113b5d94ffd24443015b9e21882a33c3b7780d
 google-services.json
 
 # Kotlin
@@ -49,4 +81,13 @@ Thumbs.db
 
 # App-specific build outputs
 /app/release/
+<<<<<<< HEAD
 /app/debug/
+=======
+/app/debug/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+>>>>>>> e2113b5d94ffd24443015b9e21882a33c3b7780d
