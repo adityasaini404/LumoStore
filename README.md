@@ -205,14 +205,6 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 
 ---
 
-## ✅ Step 3 — Save करो
-
-**Ctrl+S** दबाओ → Notepad बंद करो
-
----
-
-## ✅ Step 4 — Verify करो
-
 Terminal में:
 
 ```bash
