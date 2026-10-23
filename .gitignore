@@ -1,15 +1,52 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Built application files
+*.apk
+*.aab
+*.aar
+*.dex
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration
 local.properties
+
+# Log files
+*.log
+
+# Android Studio
+.navigation/
+captures/
+*.iml
+.idea/
+
+# Keystore files (NEVER commit these)
+*.jks
+*.keystore
+keystore.properties
+
+# External native build
+.externalNativeBuild/
+.cxx/
+
+# Google Services
+google-services.json
+
+# Kotlin
+.kotlin/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# App-specific build outputs
+/app/release/
+/app/debug/
