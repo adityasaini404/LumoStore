@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/drawable/ic_lumo_logo.xml" width="120" alt="Lumo Store logo" />
+  <img src="assets/ic_lumo_logo.png" width="120" alt="Lumo Store logo" />
 
   <h1>Lumo Store</h1>
   <p><strong>A free, open-source app store for Android.</strong></p>
