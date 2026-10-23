@@ -204,8 +204,3 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 \`\`\`
 
 ---
-
-Terminal में:
-
-```bash
-type README.md
