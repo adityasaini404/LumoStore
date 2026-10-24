@@ -238,7 +238,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
     }
 
     // ---------- Choreograph intro + Haptic feedback ----------
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) @androidx.annotation.RequiresPermission(android.Manifest.permission.VIBRATE) {
         logoVisible = true
         // Haptic feedback when logo appears
         vibrate(context, 30)
