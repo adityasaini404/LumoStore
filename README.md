@@ -1,206 +1,325 @@
-<div align="center">
-  <img src="assets/ic_lumo_logo.png" width="120" alt="Lumo Store logo" />
+ <div align="center">
 
-  <h1>Lumo Store</h1>
-  <p><strong>A free, open-source app store for Android.</strong></p>
-  <p>Discover, install, and update open-source apps — without hidden backends.</p>
+<img src="assets/ic_lumo_logo.png" width="104" alt="Lumo Store" />
 
-  <p>
-    <a href="https://github.com/adityasaini404/LumoStore/stargazers">
-      <img src="https://img.shields.io/github/stars/adityasaini404/LumoStore?logo=github&color=yellow" alt="Stars">
-    </a>
-    <a href="https://github.com/adityasaini404/LumoStore/network/members">
-      <img src="https://img.shields.io/github/forks/adityasaini404/LumoStore?logo=github&color=orange" alt="Forks">
-    </a>
-    <a href="https://github.com/adityasaini404/LumoStore/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/adityasaini404/LumoStore?color=blue" alt="License">
-    </a>
-  </p>
+# LUMO STORE
 
-  <p>
-    <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
-    <img src="https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
-    <img src="https://img.shields.io/badge/Material_3-6750A4?style=for-the-badge&logo=materialdesign&logoColor=white" alt="Material 3">
-    <img src="https://img.shields.io/badge/Ktor-087CFA?style=for-the-badge&logo=ktor&logoColor=white" alt="Ktor">
-    <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android">
-  </p>
+### Your apps. Your freedom. Your choice.
 
-  <p>
-    <a href="https://github.com/adityasaini404/LumoStore/releases">
-      <img src="https://img.shields.io/github/v/release/adityasaini404/LumoStore?style=for-the-badge&logo=github&label=Version&color=6366f1" alt="Latest Version">
-    </a>
-    <a href="https://github.com/adityasaini404/LumoStore/releases">
-      <img src="https://img.shields.io/github/downloads/adityasaini404/LumoStore/total?style=for-the-badge&logo=cloud&label=Downloads&color=10b981" alt="Total Downloads">
-    </a>
-  </p>
+**A free, open-source app store for Android.**
+
+Discover, explore, and update open-source Android apps — with a transparent, community-driven catalog and no private backend required.
+
+<br />
+
+[![GitHub Stars](https://img.shields.io/github/stars/adityasaini404/LumoStore?style=flat-square&logo=github&color=A78BFA)](https://github.com/adityasaini404/LumoStore/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/adityasaini404/LumoStore?style=flat-square&logo=github&color=818CF8)](https://github.com/adityasaini404/LumoStore/network/members)
+[![License](https://img.shields.io/github/license/adityasaini404/LumoStore?style=flat-square&color=34D399)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/adityasaini404/LumoStore?style=flat-square&logo=github&color=8B5CF6)](https://github.com/adityasaini404/LumoStore/releases)
+
+<br />
+
+[**Download Lumo Store**](https://github.com/adityasaini404/LumoStore/releases) · [**Explore Features**](#-features) · [**Contribute**](#-contributing) · [**Report a Bug**](https://github.com/adityasaini404/LumoStore/issues)
+
+<br />
+
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Material 3](https://img.shields.io/badge/Material_3-6750A4?style=for-the-badge&logo=materialdesign&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+
 </div>
 
 ---
 
-## 🌟 Overview
+## ✦ At a glance
 
-**Lumo Store** is a lightweight, open-source Android app store that focuses on three things: **simplicity**, **transparency**, and **speed**. Instead of wrapping apps in a private backend, Lumo Store pulls its catalog from a public JSON file and pre-computes every release into a `mirror.json` using **GitHub Actions**.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-That means:
+### ◈ Privacy-minded
 
-- **Zero GitHub API calls from the client** — no rate limits for users
-- **No account required** — anonymous browsing by default
-- **Full transparency** — every catalog entry is inspectable
-- **Community driven** — anyone can submit an app via a GitHub issue
+Browse without creating an account. No private application backend is required for the public catalog.
 
-> Lumo Store is built for people who care about where their apps come from.
+</td>
+<td width="50%" valign="top">
+
+### ◈ Fast by design
+
+A precomputed `mirror.json` reduces catalog loading to a single HTTP request per refresh.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ◈ Open by default
+
+Inspect the catalog, explore the source code, and contribute through GitHub.
+
+</td>
+<td width="50%" valign="top">
+
+### ◈ Built for Android
+
+A native experience powered by Kotlin, Jetpack Compose, and Material 3.
+
+</td>
+</tr>
+</table>
+
+## 📱 Preview
+
+> Replace these image paths with actual screenshots from your running app. The gallery is designed to showcase the interface before visitors dive into the documentation.
+
+<div align="center">
+
+| Home | App details |
+|:---:|:---:|
+| <img src="assets/screenshots/home.png" width="220" alt="Lumo Store home screen" /> | <img src="assets/screenshots/app-details.png" width="220" alt="Lumo Store app details screen" /> |
+| Discover featured apps and browse the catalog. | Explore app information and available releases. |
+
+| Updates | Settings |
+|:---:|:---:|
+| <img src="assets/screenshots/updates.png" width="220" alt="Lumo Store updates screen" /> | <img src="assets/screenshots/settings.png" width="220" alt="Lumo Store settings screen" /> |
+| Review available app updates. | Customize your experience and preferences. |
+
+</div>
 
 ---
 
 ## ✨ Features
 
-| Feature | Description |
+| Feature | What it offers |
 |---|---|
-| 🔍 **Smart Discovery** | Categories, featured apps, and search |
-| ⚡ **Mirror-Powered Speed** | One `mirror.json` file feeds the entire store |
-| 🎨 **13+ Themes** | Dark, Light, AMOLED, Ocean, Cyberpunk, Forest, Sunset, Sakura, Dracula, Nord, Coffee, iPhone Light/Dark |
-| 👤 **Custom Profile** | Pick your name + 4 hand-drawn avatars (Robot, Cat, Astronaut, Alien) |
-| 🛡️ **VirusTotal Integration** | Every app links to a scan of the exact APK |
-| 🔑 **Optional GitHub Token** | Works free out-of-the-box; power users can add a PAT for 5,000 req/hour |
-| 📦 **Native Install Flow** | Built-in download manager with progress |
-| 🌐 **100% Open Source** | MIT licensed |
+| 🔍 **Smart Discovery** | Search, categories, featured apps, and catalog browsing. |
+| ⚡ **Mirror-Powered Catalog** | Precomputed release metadata served through `mirror.json`. |
+| 🎨 **13+ Themes** | Dark, Light, AMOLED, Ocean, Cyberpunk, Forest, Sunset, Sakura, Dracula, Nord, Coffee, and iPhone-inspired Light/Dark themes. |
+| 👤 **Custom Profile** | Choose a display name and one of four hand-drawn avatars: Robot, Cat, Astronaut, or Alien. |
+| 🛡️ **VirusTotal Links** | Open a scan for the exact APK when a corresponding scan is available. |
+| 🔑 **Optional GitHub Token** | Works without a personal token; an optional PAT supports higher API limits for compatible requests. |
+| 📦 **Native Install Flow** | Download APK files with progress tracking and an installation flow. |
+| ➕ **Community Submissions** | Submit app suggestions through the in-app contribution flow. |
+| ❤️ **Favorites** | Keep your preferred apps easy to find. |
+| 🌐 **Open Source** | MIT-licensed project with a public source repository. |
 
 ---
 
-## 📸 Screenshots
+## 🧭 Why Lumo Store?
 
-> Screenshots coming soon with v1.1
+Many app stores depend on accounts, centralized services, or complex infrastructure. Lumo Store takes a simpler approach.
+
+Its public catalog is maintained as JSON, while GitHub Actions periodically builds a release mirror. The Android client reads the prepared catalog instead of independently querying GitHub for every app.
+
+**The idea is simple:** make discovering open-source Android apps easier while keeping the underlying data and implementation inspectable.
+
+### The mirror pipeline
+
+```text
+     apps.json
+         │
+         ▼
+  GitHub Actions
+  Scheduled build
+         │
+         ▼
+     mirror.json
+         │
+         ▼
+     Lumo Store
+         │
+         ▼
+ Browse · Search · Discover
+```
+
+**Design goals**
+
+- Minimize unnecessary API requests.
+- Avoid requiring an account for public catalog browsing.
+- Keep the catalog transparent and community-maintainable.
+- Deliver a native, customizable Android experience.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Built with
 
-- **Language:** Kotlin 2.x
-- **UI:** Jetpack Compose + Material 3
-- **HTTP:** Ktor Client
-- **JSON:** Kotlinx Serialization
-- **Image Loading:** Coil 3
-- **Markdown:** compose-markdown-text
-- **CI/CD:** GitHub Actions
+| Technology | Purpose |
+|---|---|
+| **Kotlin 2.x** | Application language |
+| **Jetpack Compose** | Declarative Android UI |
+| **Material 3** | Components, color schemes, and theming |
+| **Ktor Client** | HTTP networking |
+| **Kotlinx Serialization** | JSON parsing and serialization |
+| **Coil 3** | Image loading |
+| **compose-markdown-text** | Markdown rendering |
+| **GitHub Actions** | Catalog mirror automation and CI workflows |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Get started
 
-### Prerequisites
+### Requirements
 
-- **Android Studio** Ladybug or newer
-- **JDK 17+**
-- **Android SDK 34+**
-- Android device or emulator running **Android 8.0+ (API 26+)**
+- Android Studio Ladybug or newer
+- JDK 17 or newer
+- Android SDK 34 or newer
+- Android 8.0 or newer (API 26+)
 
-### Clone & Build
+### Clone the repository
 
-\`\`\`bash
+```bash
 git clone https://github.com/adityasaini404/LumoStore.git
 cd LumoStore
+```
+
+### Build the debug APK
+
+On macOS/Linux:
+
+```bash
 ./gradlew assembleDebug
-\`\`\`
+```
 
-APK will be at \`app/build/outputs/apk/debug/app-debug.apk\`.
+On Windows:
 
-### Release Build
+```powershell
+.\gradlew.bat assembleDebug
+```
 
-Create \`keystore.properties\` in project root (never commit this file):
+Find the generated APK at:
 
-\`\`\`properties
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Build a release APK
+
+Configure your signing credentials in `keystore.properties` in the project root. Never commit this file or your signing credentials.
+
+```properties
 storeFile=/path/to/your.keystore
 keyAlias=your-alias
 storePassword=your-store-password
 keyPassword=your-key-password
-\`\`\`
+```
 
-Then:
+Then run:
 
-\`\`\`bash
+```bash
 ./gradlew assembleRelease
-\`\`\`
+```
+
+Ensure the release signing configuration is set up in your Gradle build before running the release task.
 
 ---
 
-## 📁 Project Structure
+## 🗂️ Project structure
 
-\`\`\`
+```text
 LumoStore/
-├── app/src/main/java/com/lumo/store/
-│   ├── MainActivity.kt              # Root activity + navigation
-│   ├── data/                        # Models, API, managers
-│   │   ├── GitHubApi.kt             # Ktor client + URL normalizer
-│   │   ├── TokenManager.kt          # GitHub PAT storage
-│   │   ├── UserProfileManager.kt    # Name + avatar index
-│   │   ├── ThemeManager.kt          # Theme persistence
-│   │   ├── FavoritesManager.kt      # Favorites
-│   │   └── ReleaseCache.kt          # Local release cache
-│   ├── ui/
-│   │   ├── components/              # Reusable composables
-│   │   ├── screens/                 # Full screens
-│   │   └── theme/                   # LumoTheme + 13 color schemes
-│   └── viewmodel/
-│       ├── AppViewModel.kt          # Catalog loading
-│       └── DownloadViewModel.kt     # APK download + install
-└── app/src/main/res/                # Drawables, strings, manifests
-\`\`\`
+├── app/
+│   └── src/main/
+│       ├── java/com/lumo/store/
+│       │   ├── MainActivity.kt
+│       │   ├── data/
+│       │   │   ├── GitHubApi.kt
+│       │   │   ├── TokenManager.kt
+│       │   │   ├── UserProfileManager.kt
+│       │   │   ├── ThemeManager.kt
+│       │   │   ├── FavoritesManager.kt
+│       │   │   └── ReleaseCache.kt
+│       │   ├── ui/
+│       │   │   ├── components/
+│       │   │   ├── screens/
+│       │   │   └── theme/
+│       │   └── viewmodel/
+│       │       ├── AppViewModel.kt
+│       │       └── DownloadViewModel.kt
+│       └── res/
+│
+├── .github/
+│   └── workflows/
+├── assets/
+│   ├── ic_lumo_logo.png
+│   └── screenshots/
+├── LICENSE
+└── README.md
+```
+
+*This tree illustrates the main source areas. Your actual repository may contain additional files and directories.*
 
 ---
 
-## 🤖 The Mirror System
+## 📤 Submit an app
 
-Lumo Store doesn't hit GitHub's API every time you open it. Instead, a GitHub Action pre-computes everything:
+Help expand the Lumo Store catalog by suggesting an open-source Android application.
 
-\`\`\`
-apps.json  →  GitHub Actions (every 6h)  →  mirror.json  →  Lumo Store
-\`\`\`
+1. Open Lumo Store.
+2. Tap the **+** button in the header.
+3. Enter the app details and review the available previews.
+4. Tap **Submit for Review**.
+5. Review the generated GitHub issue and submit it.
 
-**Result:** Even with 200 apps, the app makes **1 HTTP request** per refresh. Users never see a rate limit.
+Submissions can then be reviewed through the project's community workflow.
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome! Whether it's:
+Contributions of all sizes are welcome.
 
-- 🐛 Bug fixes
-- ✨ New features
-- 🎨 UI polish
-- 📝 Documentation
-- 🌐 Translations
+- 🐛 Fix bugs and improve reliability.
+- ✨ Propose useful features.
+- 🎨 Improve UI, accessibility, and animations.
+- 📝 Improve documentation.
+- 🌍 Add translations.
+- 📦 Help maintain the catalog.
 
-Before submitting a PR:
+### Before opening a pull request
 
-\`\`\`bash
+Run the project's tests:
+
+```bash
 ./gradlew test
-\`\`\`
+```
+
+Please include a clear description of your change and screenshots for significant UI updates.
+
+**Have an idea or found a bug?**
+
+[Open an issue](https://github.com/adityasaini404/LumoStore/issues) · [Browse existing issues](https://github.com/adityasaini404/LumoStore/issues)
 
 ---
 
-## 📤 Submitting an App
+## 🔐 Transparency & security
 
-Anyone can submit an app to Lumo Store:
-
-1. Open Lumo Store
-2. Tap the **+** button in the header
-3. Fill in the details — live previews of icon & screenshots
-4. Tap **Submit for Review**
-5. A GitHub issue will open — submit it
+- The source code is publicly available for inspection.
+- Public catalog browsing does not require a GitHub account.
+- An optional GitHub token is intended for users who need higher API limits.
+- VirusTotal links provide access to relevant APK scans; a scan is not a guarantee that an app is safe.
+- Only install APKs from sources you trust, and review requested permissions before installation.
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+Lumo Store is licensed under the **MIT License**.
+
+See the [LICENSE](LICENSE) file for the complete terms.
 
 ---
 
 <div align="center">
-  <p><strong>Made with 💜 in India</strong></p>
-  <p>© 2026 Aditya Saini</p>
-  <p><sub>Lumo Store is not affiliated with Google, F-Droid, or Orion Store.</sub></p>
-</div>
-\`\`\`
 
----
+<img src="assets/ic_lumo_logo.png" width="58" alt="Lumo Store logo" />
+
+### Made with 💜 in India
+
+**Lumo Store — Discover more. Own your experience.**
+
+[GitHub Repository](https://github.com/adityasaini404/LumoStore) · [Releases](https://github.com/adityasaini404/LumoStore/releases) · [Issues](https://github.com/adityasaini404/LumoStore/issues)
+
+<sub>© 2026 Aditya Saini · Lumo Store is an independent project and is not affiliated with Google, F-Droid, or Orion Store.</sub>
+
+</div>
