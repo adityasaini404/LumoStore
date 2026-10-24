@@ -262,7 +262,7 @@ fun HomeScreen(
 
     val updateCount = apps.count { it.isUpdateAvailable }
 
-    val filteredApps = apps.filter { app ->
+    val baseFiltered = apps.filter { app ->
         val isFavTab = selectedCategory == "Favorites"
         val isUpdatesTab = selectedCategory == "Updates"
         val isInstalledTab = selectedCategory == "Installed"
@@ -276,13 +276,13 @@ fun HomeScreen(
 
         val matchesSearch = searchQuery.isBlank() || app.name.contains(searchQuery, ignoreCase = true)
         matchesCategory && matchesSearch
-    }.sortedWith(
-        when (sortBy) {
-            "A-Z" -> compareBy { it.name }
-            "Z-A" -> compareByDescending { it.name }
-            else -> compareByDescending { it.name }
-        }
-    )
+    }
+
+    val filteredApps = when (sortBy) {
+        "A-Z" -> baseFiltered.sortedBy { it.name.lowercase() }
+        "Z-A" -> baseFiltered.sortedByDescending { it.name.lowercase() }
+        else -> baseFiltered.reversed()   // Newest: reversed apps.json order
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
