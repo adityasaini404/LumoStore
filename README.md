@@ -71,24 +71,93 @@ A native experience powered by Kotlin, Jetpack Compose, and Material 3.
 
 ## 📱 Preview
 
-> Replace these image paths with actual screenshots from your running app. The gallery is designed to showcase the interface before visitors dive into the documentation.
+---
 
 <div align="center">
 
-| Splash Screen | Home Screen |
-|:---:|:---:|
-| <img src="assets/screenshots/splashscreen.png" width="220" alt="Lumo Store splash screen" /> | <img src="assets/screenshots/home.png" width="220" alt="Lumo Store app home screen" /> |
-| Discover featured apps and browse the catalog. | Explore app information and available releases. |
+## 📸 Screenshots
 
-| Installed | Settings |
-|:---:|:---:|
-| <img src="assets/screenshots/installedapps.png" width="220" alt="Lumo Store installed apps screen" /> | <img src="assets/screenshots/settings.png" width="220" alt="Lumo Store settings screen" /> |
-| View Installed Apps . | Customize your experience and preferences. |
+**Swipe or scroll to explore Lumo Store →**
 
-| Publish | Theme |
-|:---:|:---:|
-| <img src="assets/screenshots/publishapp.png" width="220" alt="Lumo Store publish app screen" /> | <img src="assets/screenshots/theme.png" width="220" alt="Lumo Store theme options" /> |
-| Here fill the form to publish your app . | Customize your app theme with 13+ themes. |
+</div>
+
+<br/>
+
+<div style="overflow-x: auto; padding: 20px 0;">
+
+<table>
+  <tr>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/splashscreen.png">
+        <img src="assets/screenshots/splashscreen.png" width="220" alt="Splash Screen" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>🎬 Splash Screen</b>
+      <br/>
+      <sub>Animated launch with twinkling stars, typewriter tagline, and a smooth progress bar</sub>
+    </td>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/home.png">
+        <img src="assets/screenshots/home.png" width="220" alt="Home Screen" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>🏠 Home</b>
+      <br/>
+      <sub>Featured apps, live search, and smart categories at a glance</sub>
+    </td>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/installedapps.png">
+        <img src="assets/screenshots/installedapps.png" width="220" alt="Installed Apps" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>📦 Installed</b>
+      <br/>
+      <sub>See everything installed and check for updates in one place</sub>
+    </td>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/settings.png">
+        <img src="assets/screenshots/settings.png" width="220" alt="Settings" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>⚙️ Settings</b>
+      <br/>
+      <sub>Customize theme, profile, GitHub token, and more — all in one place</sub>
+    </td>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/publishapp.png">
+        <img src="assets/screenshots/publishapp.png" width="220" alt="Publish App" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>📤 Publish App</b>
+      <br/>
+      <sub>Submit your own app with live previews of icon and screenshots</sub>
+    </td>
+
+    <td width="260" align="center" valign="top">
+      <a href="assets/screenshots/theme.png">
+        <img src="assets/screenshots/theme.png" width="220" alt="Themes" style="border-radius: 20px;" />
+      </a>
+      <br/><br/>
+      <b>🎨 Themes</b>
+      <br/>
+      <sub>13+ handcrafted themes — Dark, AMOLED, Ocean, Cyberpunk, and more</sub>
+    </td>
+
+  </tr>
+</table>
+
+</div>
+
+<br/>
+
+<div align="center">
+
+<sub>💡 <b>Click any screenshot to view in full size</b> · <a href="https://adityasaini404.github.io/LumoStore/">Explore the website →</a></sub>
 
 </div>
 
