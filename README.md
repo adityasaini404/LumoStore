@@ -75,15 +75,20 @@ A native experience powered by Kotlin, Jetpack Compose, and Material 3.
 
 <div align="center">
 
-| Home | App details |
+| Splash Screen | Home Screen |
 |:---:|:---:|
-| <img src="assets/screenshots/home.png" width="220" alt="Lumo Store home screen" /> | <img src="assets/screenshots/app-details.png" width="220" alt="Lumo Store app details screen" /> |
+| <img src="assets/screenshots/splashscreen.png" width="220" alt="Lumo Store splash screen" /> | <img src="assets/screenshots/home.png" width="220" alt="Lumo Store app home screen" /> |
 | Discover featured apps and browse the catalog. | Explore app information and available releases. |
 
-| Updates | Settings |
+| Installed | Settings |
 |:---:|:---:|
-| <img src="assets/screenshots/updates.png" width="220" alt="Lumo Store updates screen" /> | <img src="assets/screenshots/settings.png" width="220" alt="Lumo Store settings screen" /> |
-| Review available app updates. | Customize your experience and preferences. |
+| <img src="assets/screenshots/installedapps.png" width="220" alt="Lumo Store installed apps screen" /> | <img src="assets/screenshots/settings.png" width="220" alt="Lumo Store settings screen" /> |
+| View Installed Apps . | Customize your experience and preferences. |
+
+| Publish | Theme |
+|:---:|:---:|
+| <img src="assets/screenshots/publishapp.png" width="220" alt="Lumo Store publish app screen" /> | <img src="assets/screenshots/theme.png" width="220" alt="Lumo Store theme options" /> |
+| Here fill the form to publish your app . | Customize your app theme with 13+ themes. |
 
 </div>
 
