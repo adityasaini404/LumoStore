@@ -531,58 +531,148 @@ code {
 /* ============ SCREENSHOTS — 3D PHONES ============ */
 .phone-3d-track {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; 
   align-items: center;
-  gap: 30px;
-  padding: 40px 20px;
-  perspective: 2000px;
+  gap: 28px;
+  padding: 80px 24px 60px;
+  perspective: 2200px;
   overflow-x: auto;
-  scrollbar-width: none;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
+  scroll-snap-type: x mandatory;
 }
 
-.phone-3d-track::-webkit-scrollbar { display: none; }
+.phone-3d:first-child {
+  margin-left: auto;
+}
+
+.phone-3d:last-child {
+  margin-right: auto;
+}
+
+.phone-3d-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.phone-3d-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phone-3d-track::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 3px;
+}
 
 .phone-3d {
   flex: 0 0 auto;
-  width: 200px;
-  height: 400px;
-  border-radius: 28px;
+  width: 220px;
+  height: 460px;
+  border-radius: 32px;
   background: #0F0F16;
   border: 6px solid #1C1C26;
   box-shadow:
     0 30px 60px rgba(0, 0, 0, 0.5),
-    0 10px 20px rgba(99, 102, 241, 0.15);
+    0 10px 20px rgba(99, 102, 241, 0.15),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.04);
   overflow: hidden;
   transform: rotateY(-15deg) rotateX(5deg);
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.6s;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.7s;
   position: relative;
+  scroll-snap-align: center;
 }
 
 .phone-3d:hover {
-  transform: rotateY(0deg) rotateX(0deg) translateY(-10px) scale(1.05);
+  transform: rotateY(0deg) rotateX(0deg) translateY(-16px) scale(1.06);
   box-shadow:
-    0 40px 80px rgba(0, 0, 0, 0.6),
-    0 15px 30px rgba(99, 102, 241, 0.3);
+    0 50px 100px rgba(0, 0, 0, 0.7),
+    0 20px 40px rgba(99, 102, 241, 0.35);
   z-index: 5;
 }
 
 .phone-3d-active {
-  transform: rotateY(0deg) rotateX(0deg) translateY(-15px) scale(1.08);
+  transform: rotateY(0deg) rotateX(0deg) translateY(-12px) scale(1.05);
   box-shadow:
-    0 50px 100px rgba(0, 0, 0, 0.7),
-    0 20px 40px rgba(99, 102, 241, 0.4);
+    0 45px 90px rgba(0, 0, 0, 0.65),
+    0 18px 36px rgba(99, 102, 241, 0.35);
+}
+
+.phone-3d-active:hover {
+  transform: rotateY(0deg) rotateX(0deg) translateY(-24px) scale(1.1);
 }
 
 .phone-notch {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 6px;
+  width: 70px;
+  height: 8px;
   background: #1C1C26;
-  border-radius: 3px;
-  z-index: 2;
+  border-radius: 4px;
+  z-index: 3;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  background: #0A0A0F;
+}
+
+.phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top; 
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.phone-3d:hover .phone-screen img {
+  transform: scale(1.02);
+}
+
+.screenshots-hint {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 32px;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .phone-3d {
+    width: 180px;
+    height: 380px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .phone-3d-track {
+    gap: 20px;
+    padding: 60px 20px 40px;
+    perspective: 1600px;
+  }
+
+  .phone-3d {
+    width: 160px;
+    height: 340px;
+    transform: rotateY(-8deg) rotateX(3deg);
+  }
+
+  .phone-3d-active {
+    transform: rotateY(0deg) rotateX(0deg) scale(1.02);
+  }
+
+  .phone-notch {
+    width: 55px;
+    height: 6px;
+    top: 8px;
+  }
 }
 
 .phone-screen {

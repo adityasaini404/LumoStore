@@ -1,17 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lumo Store — A free, open-source app store</title>
-  <meta name="description" content="Discover, install, and update open-source Android apps. No trackers, no rate limits, 100% transparent.">
+  <meta name="description"
+    content="Discover, install, and update open-source Android apps. No trackers, no rate limits, 100% transparent.">
   <meta name="theme-color" content="#6366F1">
+
+  <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+  <meta property="og:title" content="Lumo Store — A free, open-source app store">
+  <meta property="og:description"
+    content="Discover, install, and update open-source Android apps. No trackers, no rate limits.">
+  <meta property="og:image" content="https://adityasaini404.github.io/LumoStore/assets/ic_lumo_logo.png">
+  <meta property="og:url" content="https://adityasaini404.github.io/LumoStore/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Lumo Store — A free, open-source app store">
+  <meta name="twitter:description" content="Discover, install, and update open-source Android apps.">
+  <meta name="twitter:image" content="https://adityasaini404.github.io/LumoStore/assets/ic_lumo_logo.png">
+
+  <link rel="icon" type="image/png" href="assets/ic_lumo_logo.png" />
+  <link rel="apple-touch-icon" href="assets/ic_lumo_logo.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ic_lumo_logo.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/ic_lumo_logo.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- ============ NAV ============ -->
@@ -28,7 +51,10 @@
         <a href="https://github.com/adityasaini404/LumoStore" target="_blank" rel="noopener" class="nav-cta">GitHub</a>
       </div>
       <button class="nav-menu-btn" id="navMenuBtn" aria-label="Menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
       </button>
     </div>
   </nav>
@@ -62,11 +88,19 @@
 
       <div class="hero-cta">
         <a href="https://github.com/adityasaini404/LumoStore/releases/latest" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="M7 10l5 5 5-5" />
+            <path d="M12 15V3" />
+          </svg>
           Download APK
         </a>
         <a href="https://github.com/adityasaini404/LumoStore" target="_blank" rel="noopener" class="btn btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+          </svg>
           View Source
         </a>
       </div>
@@ -82,7 +116,9 @@
 
     <div class="scroll-hint">
       <span>Scroll to explore</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7 7 7-7" />
+      </svg>
     </div>
   </section>
 
@@ -99,17 +135,26 @@
         <div class="tilt-card tilt-large reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
             </div>
             <h3>Mirror-powered speed</h3>
-            <p>A single <code>mirror.json</code> file feeds the entire store. Version numbers, sizes, and download links are pre-fetched by GitHub Actions — so the client never touches GitHub's API.</p>
+            <p>A single <code>mirror.json</code> file feeds the entire store. Version numbers, sizes, and download links
+              are pre-fetched by GitHub Actions — so the client never touches GitHub's API.</p>
           </div>
         </div>
 
         <div class="tilt-card reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
             </div>
             <h3>Zero trackers</h3>
             <p>No analytics, no telemetry, no ad SDKs. Your data never leaves your device.</p>
@@ -119,17 +164,26 @@
         <div class="tilt-card reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
             </div>
             <h3>No rate limits</h3>
-            <p>Works 100% free out of the box. Power users can add a GitHub token to jump from 60 to 5,000 requests/hour.</p>
+            <p>Works 100% free out of the box. Power users can add a GitHub token to jump from 60 to 5,000
+              requests/hour.</p>
           </div>
         </div>
 
         <div class="tilt-card reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
             </div>
             <h3>Custom profile</h3>
             <p>Pick your name and one of four hand-drawn avatars — all rendered on Canvas, no image assets required.</p>
@@ -139,7 +193,11 @@
         <div class="tilt-card reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
             </div>
             <h3>VirusTotal integrated</h3>
             <p>Every app detail links directly to a VirusTotal scan of the exact APK. One tap, 70+ antiviruses.</p>
@@ -149,7 +207,12 @@
         <div class="tilt-card reveal" data-tilt>
           <div class="tilt-inner">
             <div class="feature-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <path
+                  d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" />
+              </svg>
             </div>
             <h3>13+ themes</h3>
             <p>Dark, Light, AMOLED, Ocean, Cyberpunk, Forest, Sunset, Sakura, Dracula, Nord, Coffee, and more.</p>
@@ -171,23 +234,48 @@
       <div class="phone-3d-track">
         <div class="phone-3d">
           <div class="phone-notch"></div>
-          <div class="phone-screen gradient-1"><span>Storefront</span></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/splashscreen.png" alt="Splash Screen" loading="lazy">
+          </div>
         </div>
-        <div class="phone-3d">
-          <div class="phone-notch"></div>
-          <div class="phone-screen gradient-2"><span>App Detail</span></div>
-        </div>
+
         <div class="phone-3d phone-3d-active">
           <div class="phone-notch"></div>
-          <div class="phone-screen gradient-3"><span>Featured</span></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/home.png" alt="Home Screen" loading="lazy">
+          </div>
         </div>
+
         <div class="phone-3d">
           <div class="phone-notch"></div>
-          <div class="phone-screen gradient-4"><span>Settings</span></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/installedapps.png" alt="Installed Apps" loading="lazy">
+          </div>
+        </div>
+
+        <div class="phone-3d">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/settings.png" alt="Settings" loading="lazy">
+          </div>
+        </div>
+
+        <div class="phone-3d">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/publishapp.png" alt="Publish App" loading="lazy">
+          </div>
+        </div>
+
+        <div class="phone-3d">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <img src="assets/screenshots/theme.png" alt="Themes" loading="lazy">
+          </div>
         </div>
       </div>
 
-      <p class="screenshots-hint">📸 Real screenshots coming soon — replace the placeholders in <code>docs/assets/screenshots/</code></p>
+      <p class="screenshots-hint">🖱️ Hover a phone to lift it · ↔️ Swipe on mobile to explore</p>
     </div>
   </section>
 
@@ -204,7 +292,12 @@
         <p>Download the latest APK directly from GitHub. Free, ad-free, and open source.</p>
         <div class="download-buttons">
           <a href="https://github.com/adityasaini404/LumoStore/releases/latest" class="btn btn-primary btn-large">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <path d="M7 10l5 5 5-5" />
+              <path d="M12 15V3" />
+            </svg>
             Download v1.0.0 APK
           </a>
           <a href="https://github.com/adityasaini404/LumoStore" target="_blank" rel="noopener" class="btn btn-outline">
@@ -229,8 +322,10 @@
           </p>
           <div class="developer-links">
             <a href="https://github.com/adityasaini404" target="_blank" rel="noopener" class="social-chip">GitHub</a>
-            <a href="https://www.linkedin.com/in/aditya-saini-2178a4326/" target="_blank" rel="noopener" class="social-chip">LinkedIn</a>
-            <a href="https://www.reddit.com/user/AdityaSaini404" target="_blank" rel="noopener" class="social-chip">Reddit</a>
+            <a href="https://www.linkedin.com/in/aditya-saini-2178a4326/" target="_blank" rel="noopener"
+              class="social-chip">LinkedIn</a>
+            <a href="https://www.reddit.com/user/AdityaSaini404" target="_blank" rel="noopener"
+              class="social-chip">Reddit</a>
           </div>
         </div>
       </div>
@@ -258,7 +353,8 @@
           <h4>Project</h4>
           <a href="https://github.com/adityasaini404/LumoStore" target="_blank" rel="noopener">GitHub</a>
           <a href="https://github.com/adityasaini404/lumo-store-apps" target="_blank" rel="noopener">Catalog</a>
-          <a href="https://github.com/adityasaini404/LumoStore/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+          <a href="https://github.com/adityasaini404/LumoStore/blob/main/LICENSE" target="_blank"
+            rel="noopener">License</a>
         </div>
       </div>
     </div>
@@ -271,4 +367,5 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="script.js"></script>
 </body>
+
 </html>
