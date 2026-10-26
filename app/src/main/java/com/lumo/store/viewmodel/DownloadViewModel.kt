@@ -6,6 +6,7 @@ import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lumo.store.data.ApkVariant
 import com.lumo.store.data.AppInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,11 +17,27 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
+enum class DownloadStatus {
+    Idle,
+    Downloading,
+    Downloaded,
+    Installing,
+    Completed,
+    Error
+}
+
 data class DownloadState(
     val app: AppInfo? = null,
+    val variant: ApkVariant? = null,
     val progress: Float = 0f,
+    val bytesDownloaded: Long = 0L,
+    val totalBytes: Long = 0L,
+    val speedBytesPerSec: Long = 0L,
+    val etaSeconds: Int = 0,
+    val status: DownloadStatus = DownloadStatus.Idle,
     val isDownloading: Boolean = false,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val errorMessage: String? = null
 )
 
 class DownloadViewModel : ViewModel() {
@@ -28,63 +45,98 @@ class DownloadViewModel : ViewModel() {
     private val _downloadState = MutableStateFlow(DownloadState())
     val downloadState: StateFlow<DownloadState> = _downloadState
 
-    // फाइल का नाम यहाँ तय कर लिया ताकि इंस्टॉल के समय दिक्कत न आए
-    private fun getFileName(app: AppInfo): String {
-        return "${app.name.replace(" ", "_")}_v${app.version}.apk"
-    }
+    fun startDownload(
+        context: Context,
+        app: AppInfo,
+        variant: ApkVariant? = null
+    ) {
+        val url = (variant?.downloadUrl ?: app.downloadUrl).ifBlank { return }
+        val fileName = variant?.filename?.ifBlank { null } ?: getFileName(app)
 
-    fun startDownload(context: Context, app: AppInfo) {
-        if (app.downloadUrl.isBlank()) {
-            android.util.Log.e("LumoStore", "Download URL is empty")
-            return
-        }
+        _downloadState.value = DownloadState(
+            app = app,
+            variant = variant,
+            status = DownloadStatus.Downloading,
+            isDownloading = true,
+            progress = 0f,
+            totalBytes = variant?.size ?: 0L
+        )
 
-        _downloadState.value = DownloadState(app = app, isDownloading = true, progress = 0f)
-
-        // बैकग्राउंड थ्रेड में डाउनलोड शुरू करो (बिना नोटिफिकेशन के)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val url = URL(app.downloadUrl)
-                val connection = url.openConnection() as HttpURLConnection
+                val connection = URL(url).openConnection() as HttpURLConnection
+                connection.connectTimeout = 15000
+                connection.readTimeout = 30000
                 connection.connect()
 
                 if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                     throw Exception("Server returned ${connection.responseCode}")
                 }
 
-                val fileLength = connection.contentLength
-                val fileName = getFileName(app)
+                val declared = connection.contentLengthLong
+                val totalBytes = if (declared > 0) declared else (variant?.size ?: 0L)
 
-                // फाइल ऐप के अंदरूनी स्टोरेज (Downloads) में सेव होगी
-                val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+                val file = File(
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                    fileName
+                )
+
+                var lastUpdate = System.currentTimeMillis()
+                var lastBytes = 0L
+                var speed = 0L
 
                 connection.inputStream.use { input ->
                     FileOutputStream(file).use { output ->
-                        val buffer = ByteArray(4096)
+                        val buffer = ByteArray(8192)
                         var bytesRead: Int
-                        var totalBytesRead = 0L
+                        var totalRead = 0L
 
                         while (input.read(buffer).also { bytesRead = it } != -1) {
                             output.write(buffer, 0, bytesRead)
-                            totalBytesRead += bytesRead
+                            totalRead += bytesRead
 
-                            if (fileLength > 0) {
-                                val progress = totalBytesRead.toFloat() / fileLength.toFloat()
-                                _downloadState.value = _downloadState.value.copy(progress = progress)
+                            val now = System.currentTimeMillis()
+                            val elapsed = now - lastUpdate
+                            if (elapsed >= 250) {
+                                speed = ((totalRead - lastBytes) * 1000 / elapsed)
+                                lastUpdate = now
+                                lastBytes = totalRead
+
+                                val progress = if (totalBytes > 0)
+                                    (totalRead.toFloat() / totalBytes).coerceIn(0f, 1f)
+                                else 0f
+
+                                val eta = if (speed > 0 && totalBytes > 0)
+                                    ((totalBytes - totalRead) / speed).toInt()
+                                else 0
+
+                                _downloadState.value = _downloadState.value.copy(
+                                    progress = progress,
+                                    bytesDownloaded = totalRead,
+                                    totalBytes = totalBytes,
+                                    speedBytesPerSec = speed,
+                                    etaSeconds = eta
+                                )
                             }
                         }
                     }
                 }
 
-                // डाउनलोड पूरा हुआ
                 _downloadState.value = _downloadState.value.copy(
+                    progress = 1f,
+                    status = DownloadStatus.Downloaded,
                     isDownloading = false,
                     isCompleted = true,
-                    progress = 1f
+                    speedBytesPerSec = 0L,
+                    etaSeconds = 0
                 )
             } catch (e: Exception) {
                 android.util.Log.e("LumoStore", "Download failed: ${e.message}")
-                _downloadState.value = DownloadState() // एरर आने पर रीसेट करो
+                _downloadState.value = _downloadState.value.copy(
+                    status = DownloadStatus.Error,
+                    isDownloading = false,
+                    errorMessage = e.message
+                )
             }
         }
     }
@@ -93,15 +145,26 @@ class DownloadViewModel : ViewModel() {
         _downloadState.value = DownloadState()
     }
 
-    // इंस्टॉल के लिए फाइल खोलना
+    // ---------- INSTALL (FIXED: no immediate dismiss) ----------
     fun installApk(context: Context, appName: String) {
-        val currentApp = _downloadState.value.app ?: return
-        val fileName = getFileName(currentApp)
+        val state = _downloadState.value
+        val currentApp = state.app ?: return
+        val fileName = state.variant?.filename?.ifBlank { null } ?: getFileName(currentApp)
 
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
 
-        if (file.exists()) {
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+        if (!file.exists()) {
+            android.util.Log.e("LumoStore", "APK file not found: $fileName")
+            dismiss()
+            return
+        }
+
+        try {
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                file
+            )
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -109,16 +172,33 @@ class DownloadViewModel : ViewModel() {
             }
             context.startActivity(intent)
 
-            // इंस्टॉलर खुलने के 5 सेकंड बाद फाइल डिलीट कर दो
+            _downloadState.value = _downloadState.value.copy(
+                status = DownloadStatus.Installing
+            )
+
+            // Delete APK after 60s
             viewModelScope.launch(Dispatchers.IO) {
-                kotlinx.coroutines.delay(5000)
-                if (file.exists()) {
-                    file.delete()
+                kotlinx.coroutines.delay(60000)
+                if (file.exists()) file.delete()
+            }
+
+            // Auto-dismiss DownloadBar after 8s
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(8000)
+                if (_downloadState.value.status == DownloadStatus.Installing) {
+                    dismiss()
                 }
             }
-        } else {
-            android.util.Log.e("LumoStore", "File not found to install")
+        } catch (e: Exception) {
+            android.util.Log.e("LumoStore", "Install failed: ${e.message}")
+            _downloadState.value = _downloadState.value.copy(
+                status = DownloadStatus.Error,
+                errorMessage = "Cannot open installer"
+            )
         }
-        dismiss()
+    }
+
+    private fun getFileName(app: AppInfo): String {
+        return "${app.name.replace(" ", "_")}_v${app.version}.apk"
     }
 }

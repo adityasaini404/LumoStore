@@ -8,15 +8,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -29,14 +33,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,7 +63,6 @@ import com.lumo.store.screens.SettingsScreen
 import com.lumo.store.screens.SplashScreen
 import com.lumo.store.screens.SubmitScreen
 import com.lumo.store.screens.UserAvatar
-import com.lumo.store.ui.components.AppCard
 import com.lumo.store.ui.components.AppRateLimitDialog
 import com.lumo.store.ui.components.BottomNavBar
 import com.lumo.store.ui.components.DownloadBar
@@ -116,16 +122,16 @@ fun LumoNavHost(
                 navController = navController,
                 startDestination = "home",
                 enterTransition = {
-                    scaleIn(initialScale = 0.85f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(350))
+                    scaleIn(initialScale = 0.95f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(350))
                 },
                 exitTransition = {
-                    scaleOut(targetScale = 0.85f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(350))
+                    scaleOut(targetScale = 0.95f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(350))
                 },
                 popEnterTransition = {
-                    scaleIn(initialScale = 0.85f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(350))
+                    scaleIn(initialScale = 0.95f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(350))
                 },
                 popExitTransition = {
-                    scaleOut(targetScale = 0.85f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(350))
+                    scaleOut(targetScale = 0.95f, animationSpec = tween(350, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(350))
                 }
             ) {
                 composable("home") {
@@ -163,7 +169,9 @@ fun LumoNavHost(
                         AppDetailScreen(
                             app = app,
                             onBack = { navController.popBackStack() },
-                            onDownloadClick = { downloadViewModel.startDownload(context, app) }
+                            onDownloadClick = { app, variant ->
+                                downloadViewModel.startDownload(context, app, variant)
+                            }
                         )
                     }
                 }
@@ -206,7 +214,10 @@ fun LumoNavHost(
             DownloadBar(
                 state = downloadState,
                 onInstall = { downloadViewModel.installApk(context, downloadState.app?.name ?: "") },
-                onDismiss = { downloadViewModel.dismiss() }
+                onDismiss = { downloadViewModel.dismiss() },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
             )
 
             AppRateLimitDialog(
@@ -216,7 +227,27 @@ fun LumoNavHost(
                     }
                 }
             )
+
+            LaunchedEffect(downloadState.status, downloadState.app?.id) {
+                if (downloadState.status == com.lumo.store.viewmodel.DownloadStatus.Downloaded
+                    && downloadState.app != null) {
+                    kotlinx.coroutines.delay(600)
+                    downloadViewModel.installApk(context, downloadState.app!!.name)
+                }
+            }
         }
+    }
+}
+
+// ========================================
+// HELPER: Format Downloads Count
+// ========================================
+fun formatDownloads(count: Long): String {
+    if (count <= 0) return ""
+    return when {
+        count >= 1_000_000 -> String.format("%.1fM+", count / 1_000_000.0)
+        count >= 1_000 -> String.format("%.1fK+", count / 1_000.0)
+        else -> "$count"
     }
 }
 
@@ -235,9 +266,7 @@ fun HomeScreen(
     val rateLimitMessage by viewModel.rateLimitMessage.collectAsState()
     val context = LocalContext.current
 
-    // Profile avatar shown in the header
     val avatarIndex = UserProfileManager.getAvatarIndex(context)
-
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val bgColor = MaterialTheme.colorScheme.background
@@ -250,7 +279,6 @@ fun HomeScreen(
     var sortBy by remember { mutableStateOf("Newest") }
     var showSortSheet by remember { mutableStateOf(false) }
 
-    // Local refresh state so the pull-to-refresh spinner stays visible long enough
     val scope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -259,8 +287,6 @@ fun HomeScreen(
         apps.forEach { app -> if (app.category.isNotBlank()) baseCategories.add(app.category) }
         baseCategories.toList()
     }
-
-    val updateCount = apps.count { it.isUpdateAvailable }
 
     val baseFiltered = apps.filter { app ->
         val isFavTab = selectedCategory == "Favorites"
@@ -274,6 +300,7 @@ fun HomeScreen(
             else -> selectedCategory == "All" || app.category.equals(selectedCategory, ignoreCase = true)
         }
 
+        // Search Logic: Instantly filter by name
         val matchesSearch = searchQuery.isBlank() || app.name.contains(searchQuery, ignoreCase = true)
         matchesCategory && matchesSearch
     }
@@ -281,71 +308,69 @@ fun HomeScreen(
     val filteredApps = when (sortBy) {
         "A-Z" -> baseFiltered.sortedBy { it.name.lowercase() }
         "Z-A" -> baseFiltered.sortedByDescending { it.name.lowercase() }
-        else -> baseFiltered.reversed()   // Newest: reversed apps.json order
+        else -> baseFiltered.reversed() // Newest first
     }
 
     Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
 
-            // ---------- 1. COMPACT HEADER ----------
+            // ========================================
+            // TOP HEADER (Logo, Title, Actions)
+            // ========================================
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // App logo from drawable
+                // App Logo (Using your drawable)
                 Image(
                     painter = painterResource(id = R.drawable.ic_lumo_logo),
-                    contentDescription = "Lumo Store",
+                    contentDescription = "Lumo Logo",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(42.dp)
                         .clip(RoundedCornerShape(12.dp))
                 )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // App title with a simple slogan
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Lumo Store",
+                        text = "Lumo Store",
                         color = textColor,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp
+                        letterSpacing = (-0.5).sp
                     )
                     Text(
-                        "Discover · Install · Enjoy",
+                        text = "Open Source. No Limits.",
                         color = textColor.copy(alpha = 0.5f),
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
-                // Submit button
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(primaryColor, secondaryColor)))
-                        .clickable { onSubmitClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = "Submit App",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // User avatar from Settings
+                // Submit Button (+)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .border(2.dp, primaryColor.copy(alpha = 0.35f), CircleShape)
+                        .background(surfaceColor)
+                        .border(1.dp, textColor.copy(alpha = 0.08f), CircleShape)
+                        .clickable { onSubmitClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Submit App", tint = textColor, modifier = Modifier.size(20.dp))
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // Profile Avatar
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, primaryColor.copy(alpha = 0.5f), CircleShape)
                         .clickable { onProfileClick() }
                 ) {
                     UserAvatar(
@@ -357,94 +382,57 @@ fun HomeScreen(
                 }
             }
 
-            // ---------- 2. SEARCH BAR ----------
+            // ========================================
+            // SEARCH BAR
+            // ========================================
             Row(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(surfaceColor)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .border(1.dp, textColor.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.Search, contentDescription = "Search", tint = textColor.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 BasicTextField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    textStyle = TextStyle(color = textColor, fontSize = 15.sp),
+                    onValueChange = { searchQuery = it }, // Instant filtering
+                    textStyle = TextStyle(color = textColor, fontSize = 14.sp),
                     cursorBrush = SolidColor(primaryColor),
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->
                         if (searchQuery.isEmpty()) {
-                            Text("Search apps, games, tools...", color = textColor.copy(alpha = 0.4f), fontSize = 15.sp)
+                            Text("Search apps by name...", color = textColor.copy(alpha = 0.4f), fontSize = 14.sp)
                         }
                         innerTextField()
                     }
                 )
-                if (searchQuery.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(textColor.copy(alpha = 0.1f))
-                            .clickable { searchQuery = "" },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear", tint = textColor, modifier = Modifier.size(14.dp))
-                    }
+
+                // Filter/Sort Icon
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .clickable { showSortSheet = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = "Filter", tint = primaryColor, modifier = Modifier.size(18.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // ---------- 3. CATEGORIES ----------
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(categories) { catName ->
-                    val sel = catName == selectedCategory
-                    val catIcon = categoryIconFor(catName)
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(if (sel) Brush.horizontalGradient(listOf(primaryColor, secondaryColor)) else Brush.horizontalGradient(listOf(surfaceColor, surfaceColor)))
-                            .border(
-                                width = if (sel) 0.dp else 1.dp,
-                                color = if (sel) Color.Transparent else textColor.copy(alpha = 0.08f),
-                                shape = RoundedCornerShape(50)
-                            )
-                            .clickable { selectedCategory = catName }
-                            .padding(horizontal = 14.dp, vertical = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = catIcon,
-                            contentDescription = null,
-                            tint = if (sel) Color.White else textColor.copy(alpha = 0.7f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = catName,
-                            color = if (sel) Color.White else textColor.copy(alpha = 0.85f),
-                            fontSize = 13.sp,
-                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // ---------- 4. MAIN CONTENT ----------
+            // ========================================
+            // MAIN SCROLLABLE CONTENT
+            // ========================================
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = {
                     isRefreshing = true
                     viewModel.loadApps()
-                    // Ensure the refresh spinner is visible for at least 1.2 seconds
                     scope.launch {
                         delay(1200)
                         isRefreshing = false
@@ -462,19 +450,19 @@ fun HomeScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .padding(horizontal = 20.dp, vertical = 6.dp)
+                                    .clip(RoundedCornerShape(14.dp))
                                     .background(Color(0xFFFFF3CD))
-                                    .border(1.dp, Color(0xFFFFEBAA), RoundedCornerShape(16.dp))
-                                    .padding(16.dp),
+                                    .border(1.dp, Color(0xFFFFEBAA), RoundedCornerShape(14.dp))
+                                    .padding(14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Outlined.Warning, contentDescription = "Warning", tint = Color(0xFF856404), modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Icon(Icons.Outlined.Warning, contentDescription = null, tint = Color(0xFF856404), modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "GitHub API Limit: $rateLimitMessage",
+                                    text = "API Limit: $rateLimitMessage",
                                     color = Color(0xFF856404),
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -482,22 +470,70 @@ fun HomeScreen(
                         }
                     }
 
-                    // Featured of Day carousel (Home + no search only)
+                    // Categories (Squircle Icons)
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            items(categories) { catName ->
+                                val sel = catName == selectedCategory
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .width(64.dp)
+                                        .clickable { selectedCategory = catName }
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(58.dp)
+                                            .clip(RoundedCornerShape(18.dp))
+                                            .background(if (sel) primaryColor else surfaceColor)
+                                            .border(1.dp, if (sel) Color.Transparent else textColor.copy(alpha = 0.05f), RoundedCornerShape(18.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = categoryIconFor(catName),
+                                            contentDescription = catName,
+                                            tint = if (sel) Color.White else textColor,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = catName,
+                                        color = if (sel) primaryColor else textColor.copy(alpha = 0.7f),
+                                        fontSize = 11.sp,
+                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+
+                    // Featured Apps Carousel
                     if (selectedCategory == "All" && searchQuery.isBlank() && filteredApps.size >= 2) {
                         item {
                             Column(modifier = Modifier.padding(bottom = 20.dp)) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Featured of Day", color = textColor, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "Featured Apps",
+                                        color = textColor,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                                 LazyRow(
                                     contentPadding = PaddingValues(horizontal = 20.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                                 ) {
                                     items(filteredApps.take(6)) { app ->
                                         FeaturedAppCard(
@@ -505,8 +541,9 @@ fun HomeScreen(
                                             primaryColor = primaryColor,
                                             secondaryColor = secondaryColor,
                                             textColor = textColor,
+                                            surfaceColor = surfaceColor,
                                             onClick = { onAppClick(app) },
-                                            onInstallClick = { onDownloadClick(app) }
+                                            onInstallClick = { onAppClick(app) }
                                         )
                                     }
                                 }
@@ -514,55 +551,40 @@ fun HomeScreen(
                         }
                     }
 
-                    // All Apps header
+                    // Top Free / All Apps List
                     item {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (selectedCategory == "All") "Total Apps" else selectedCategory,
+                                text = if (selectedCategory == "All") "Top Free Apps" else selectedCategory,
                                 color = textColor,
-                                fontSize = 17.sp
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
                             )
-
-// Small pill showing how many apps are in the current view
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(textColor.copy(alpha = 0.06f))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = "${filteredApps.size}",
-                                    color = textColor.copy(alpha = 0.6f),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
                             Spacer(modifier = Modifier.weight(1f))
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(10.dp))
                                     .background(surfaceColor)
                                     .clickable { showSortSheet = true }
-                                    .padding(horizontal = 10.dp, vertical = 5.dp)
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Sort, contentDescription = "Sort", tint = primaryColor, modifier = Modifier.size(14.dp))
+                                    Icon(Icons.Default.Sort, "Sort", tint = textColor, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(sortBy, color = primaryColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(sortBy, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
-                    // App list
+                    // Apps list
                     if (loading && apps.isEmpty()) {
                         items(4) {
-                            Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)) {
+                            Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp)) {
                                 ShimmerAppCard()
                             }
                         }
@@ -572,42 +594,26 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth().padding(48.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .clip(CircleShape)
-                                        .background(primaryColor.copy(alpha = 0.08f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Outlined.SearchOff, contentDescription = null, tint = primaryColor.copy(alpha = 0.6f), modifier = Modifier.size(32.dp))
-                                }
+                                Icon(Icons.Outlined.SearchOff, null, tint = primaryColor.copy(alpha = 0.5f), modifier = Modifier.size(48.dp))
                                 Spacer(modifier = Modifier.height(12.dp))
-                                Text(
-                                    "No apps found",
-                                    color = textColor,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "Try a different search or category",
-                                    color = textColor.copy(alpha = 0.5f),
-                                    fontSize = 12.sp
-                                )
+                                Text("No apps found", color = textColor, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                                if (searchQuery.isNotBlank()) {
+                                    Text("Try a different name", color = textColor.copy(alpha = 0.5f), fontSize = 12.sp)
+                                }
                             }
                         }
                     } else {
-                        items(filteredApps) { app ->
-                            Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 5.dp)) {
-                                AppCard(
+                        itemsIndexed(filteredApps) { index, app ->
+                            Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
+                                TopFreeAppCard(
+                                    rank = index + 1,
                                     app = app,
-                                    isFavorite = favorites.contains(app.id),
-                                    onFavoriteToggle = {
-                                        FavoritesManager.toggleFavorite(context, app.id)
-                                        favorites = FavoritesManager.getFavorites(context)
-                                    },
-                                    onInstallClick = { onDownloadClick(app) },
-                                    onClick = { onAppClick(app) }
+                                    primaryColor = primaryColor,
+                                    secondaryColor = secondaryColor,
+                                    textColor = textColor,
+                                    surfaceColor = surfaceColor,
+                                    onClick = { onAppClick(app) },
+                                    onInstallClick = { onAppClick(app) }
                                 )
                             }
                         }
@@ -616,7 +622,9 @@ fun HomeScreen(
             }
         }
 
-        // Sort bottom sheet
+        // ========================================
+        // SORT BOTTOM SHEET
+        // ========================================
         if (showSortSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showSortSheet = false },
@@ -624,119 +632,252 @@ fun HomeScreen(
                 contentColor = textColor
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text("Sort Apps By", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
-                    listOf("Newest", "A-Z", "Z-A").forEach { option ->
+                    Text("Sort Apps By", fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+                    listOf(
+                        "Newest" to Icons.Default.NewReleases,
+                        "A-Z" to Icons.Default.SortByAlpha,
+                        "Z-A" to Icons.Default.SortByAlpha
+                    ).forEach { (option, icon) ->
+                        val isSelected = sortBy == option
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (isSelected) primaryColor.copy(alpha = 0.10f) else Color.Transparent)
                                 .clickable { sortBy = option; showSortSheet = false }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                                .padding(vertical = 12.dp, horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            RadioButton(
-                                selected = sortBy == option,
-                                onClick = { sortBy = option; showSortSheet = false },
-                                colors = RadioButtonDefaults.colors(selectedColor = primaryColor)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSelected) primaryColor.copy(alpha = 0.15f) else textColor.copy(alpha = 0.06f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(icon, null, tint = if (isSelected) primaryColor else textColor.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
+                            }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(option, fontSize = 16.sp, fontWeight = if (sortBy == option) FontWeight.Bold else FontWeight.Normal)
+                            Text(option, fontSize = 15.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, color = if (isSelected) primaryColor else textColor, modifier = Modifier.weight(1f))
+                            if (isSelected) Icon(Icons.Default.CheckCircle, null, tint = primaryColor, modifier = Modifier.size(20.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
     }
 }
 
-// ---------- FEATURED APP CARD (smaller) ----------
+// ========================================
+// NEW PREMIUM FEATURED CARD
+// ========================================
 @Composable
 fun FeaturedAppCard(
     app: AppInfo,
     primaryColor: Color,
     secondaryColor: Color,
     textColor: Color,
-    onClick: () -> Unit,
-    onInstallClick: () -> Unit
+    surfaceColor: Color,
+    onClick: () -> Unit = {},
+    onInstallClick: () -> Unit = {}
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "scale")
+
     Box(
         modifier = Modifier
             .width(160.dp)
             .height(200.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .scale(scale)
+            .clip(RoundedCornerShape(24.dp))
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        primaryColor.copy(alpha = 0.10f),
-                        secondaryColor.copy(alpha = 0.22f)
+                        primaryColor.copy(alpha = 0.15f),
+                        secondaryColor.copy(alpha = 0.05f),
+                        surfaceColor
                     )
                 )
             )
-            .border(1.dp, primaryColor.copy(alpha = 0.14f), RoundedCornerShape(20.dp))
-            .clickable { onClick() }
-            .padding(12.dp)
+            .border(1.dp, primaryColor.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // App Icon
             AsyncImage(
                 model = app.icon,
                 contentDescription = app.name,
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
             )
-            Spacer(modifier = Modifier.height(10.dp))
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // App Name & Category
             Text(
                 app.name,
                 color = textColor,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 app.category,
-                color = textColor.copy(alpha = 0.5f),
-                fontSize = 10.sp,
+                color = textColor.copy(alpha = 0.6f),
+                fontSize = 12.sp,
                 maxLines = 1
             )
+
             Spacer(modifier = Modifier.weight(1f))
-            if (app.version != "N/A" && app.version.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(primaryColor.copy(alpha = 0.10f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        app.version,
-                        color = primaryColor,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
+
+            // Actual Downloads Count
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.FileDownload,
+                    contentDescription = null,
+                    tint = textColor.copy(alpha = 0.5f),
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (app.downloadCount > 0) formatDownloads(app.downloadCount) else "New",
+                    color = textColor.copy(alpha = 0.7f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Install Button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(9.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(Brush.horizontalGradient(listOf(primaryColor, secondaryColor)))
                     .clickable { onInstallClick() }
-                    .padding(vertical = 7.dp),
+                    .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Install", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "View",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
 }
 
-// ---------- MAP A CATEGORY NAME TO AN ICON ----------
+// ========================================
+// NEW PREMIUM VERTICAL LIST CARD (Top Free)
+// ========================================
+@Composable
+fun TopFreeAppCard(
+    rank: Int,
+    app: AppInfo,
+    primaryColor: Color,
+    secondaryColor: Color,
+    textColor: Color,
+    surfaceColor: Color,
+    onClick: () -> Unit = {},
+    onInstallClick: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Rank Number
+        Text(
+            text = "$rank",
+            color = if (rank <= 3) primaryColor else textColor.copy(alpha = 0.5f),
+            fontSize = if (rank <= 3) 20.sp else 18.sp,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.width(28.dp),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        // App Icon
+        AsyncImage(
+            model = app.icon,
+            contentDescription = app.name,
+            modifier = Modifier
+                .size(54.dp)
+                .clip(RoundedCornerShape(14.dp))
+        )
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        // App Info
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                app.name,
+                color = textColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                app.description.ifBlank { app.category },
+                color = textColor.copy(alpha = 0.5f),
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Actual Downloads Count
+            if (app.downloadCount > 0) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Icon(Icons.Default.FileDownload, null, tint = textColor.copy(alpha = 0.5f), modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(formatDownloads(app.downloadCount), color = textColor.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Action Button (Open/Install)
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(if (app.isInstalled) textColor.copy(alpha = 0.1f) else primaryColor.copy(alpha = 0.15f))
+                .clickable { onInstallClick() }
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = if (app.isInstalled) "Open" else "Get",
+                color = if (app.isInstalled) textColor else primaryColor,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+// ========================================
+// CATEGORY ICON MAPPER
+// ========================================
 private fun categoryIconFor(name: String): ImageVector = when (name.lowercase()) {
-    "all" -> Icons.Default.Apps
-    "installed" -> Icons.Default.Download
+    "all" -> Icons.Default.GridView
+    "installed" -> Icons.Default.DownloadDone
     "updates" -> Icons.Default.SystemUpdate
     "favorites" -> Icons.Default.Favorite
     "educational", "education", "learning" -> Icons.Default.School
@@ -744,5 +885,8 @@ private fun categoryIconFor(name: String): ImageVector = when (name.lowercase())
     "tools", "utility", "utilities" -> Icons.Default.Build
     "social" -> Icons.Default.People
     "media", "music", "video" -> Icons.Default.PlayArrow
+    "developer" -> Icons.Default.Code
+    "productivity" -> Icons.Default.CheckCircle
+    "art" -> Icons.Default.Brush
     else -> Icons.Default.Category
 }

@@ -1,6 +1,6 @@
 package com.lumo.store.ui.components
 
-import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.exoplayer.offline.Download
 import coil3.compose.SubcomposeAsyncImage
 import com.lumo.store.data.AppInfo
 
@@ -35,8 +36,7 @@ fun AppCard(
     app: AppInfo,
     isFavorite: Boolean,
     onFavoriteToggle: () -> Unit,
-    onInstallClick: () -> Unit,
-    onClick: () -> Unit = {},
+    onClick: () -> Unit = {},       // navigate to detail
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -45,7 +45,6 @@ fun AppCard(
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
 
-    // प्रेस एनिमेशन
     val cardInteractionSource = remember { MutableInteractionSource() }
     val isCardPressed by cardInteractionSource.collectIsPressedAsState()
     val cardScale by animateFloatAsState(
@@ -67,7 +66,7 @@ fun AppCard(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. App Icon
+                // Icon
                 SubcomposeAsyncImage(
                     model = app.icon,
                     contentDescription = app.name,
@@ -87,7 +86,7 @@ fun AppCard(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // 2. Center Info
+                // Info
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -101,12 +100,7 @@ fun AppCard(
                         )
                         if (app.isInstalled) {
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "✓",
-                                color = Color(0xFF4CAF50),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Black
-                            )
+                            Text("✓", color = Color(0xFF4CAF50), fontSize = 14.sp, fontWeight = FontWeight.Black)
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -117,16 +111,35 @@ fun AppCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+
+                    // Downloads count (if available)
+                    if (app.downloadCount > 0) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "↓",
+                                color = textColor.copy(alpha = 0.4f),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = formatDownloads(app.downloadCount),
+                                color = textColor.copy(alpha = 0.5f),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // 3. Right Actions (Heart + Button)
+                // Actions
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ❤️ Heart Icon (Material)
+                    // Favorite
                     Box(
                         modifier = Modifier.size(34.dp).clip(CircleShape).clickable { onFavoriteToggle() },
                         contentAlignment = Alignment.Center
@@ -139,7 +152,7 @@ fun AppCard(
                         )
                     }
 
-                    // Get / Open / Update Button
+                    // Get / Open / Update button
                     val btnText = when {
                         app.isUpdateAvailable -> "Update"
                         app.isInstalled -> "Open"
@@ -165,11 +178,26 @@ fun AppCard(
                                 interactionSource = btnInteractionSource,
                                 indication = null
                             ) {
+                                // ✅ FIX: Get/Update → navigate to detail (not direct download)
                                 if (app.isInstalled && !app.isUpdateAvailable) {
+                                    // Open app
+                                    if (app.packageName.isBlank()) {
+                                        Toast.makeText(context, "No package name", Toast.LENGTH_SHORT).show()
+                                        return@clickable
+                                    }
                                     val intent = context.packageManager.getLaunchIntentForPackage(app.packageName)
-                                    if (intent != null) context.startActivity(intent)
+                                    if (intent != null) {
+                                        try {
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Cannot open app", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "App installed but cannot open", Toast.LENGTH_SHORT).show()
+                                    }
                                 } else {
-                                    onInstallClick()
+                                    // Get or Update → navigate to detail
+                                    onClick()
                                 }
                             }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -186,4 +214,10 @@ fun AppCard(
             }
         }
     }
+}
+
+private fun formatDownloads(count: Long): String = when {
+    count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
+    count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+    else -> count.toString()
 }

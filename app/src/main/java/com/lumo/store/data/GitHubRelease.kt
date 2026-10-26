@@ -17,5 +17,6 @@ data class GitHubRelease(
 data class GitHubAsset(
     @SerialName("name") val name: String = "",
     @SerialName("size") val size: Long = 0L,
-    @SerialName("browser_download_url") val downloadUrl: String = ""
+    @SerialName("browser_download_url") val downloadUrl: String = "",
+    @SerialName("download_count") val downloadCount: Long = 0L   // ✅ NEW
 )
