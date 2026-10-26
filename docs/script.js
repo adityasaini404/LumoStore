@@ -1,272 +1,227 @@
-// ======================================================
-// THREE.JS 3D BACKGROUND
-// ======================================================
-(function initThree() {
-  if (typeof THREE === 'undefined') return;
+// ==========================================
+// 1. THEME TOGGLE (Default: DARK)
+// ==========================================
+const themeToggleBtn = document.getElementById('theme-toggle');
+const themeIcon = document.getElementById('theme-icon');
+const htmlElement = document.documentElement;
 
-  const canvas = document.getElementById('bg-canvas');
-  if (!canvas) return;
+// ✅ Use new key so old 'light' preference doesn't interfere
+// Default is always 'dark' for fresh visitors
+const savedTheme = localStorage.getItem('lumo-theme-v2') || 'dark';
+htmlElement.setAttribute('data-theme', savedTheme);
+themeIcon.innerText = savedTheme === 'dark' ? 'light_mode' : 'dark_mode';
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.z = 5;
+themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = htmlElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    htmlElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('lumo-theme-v2', newTheme);
+    themeIcon.innerText = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+});
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: true
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// ==========================================
+// 2. HAMBURGER MENU (Mobile)
+// ==========================================
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const navLinksMenu = document.getElementById('navLinks');
 
-  // ---- PARTICLES ----
-  const particleCount = window.innerWidth < 768 ? 800 : 2000;
-  const particleGeo = new THREE.BufferGeometry();
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
+if (hamburgerBtn && navLinksMenu) {
+    hamburgerBtn.addEventListener('click', () => {
+        hamburgerBtn.classList.toggle('active');
+        navLinksMenu.classList.toggle('open');
+    });
 
-  const colorA = new THREE.Color(0x6366F1);
-  const colorB = new THREE.Color(0xA855F7);
+    // Close menu when any link is clicked
+    navLinksMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburgerBtn.classList.remove('active');
+            navLinksMenu.classList.remove('open');
+        });
+    });
 
-  for (let i = 0; i < particleCount; i++) {
-    positions[i * 3]     = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!hamburgerBtn.contains(e.target) && 
+            !navLinksMenu.contains(e.target) && 
+            navLinksMenu.classList.contains('open')) {
+            hamburgerBtn.classList.remove('active');
+            navLinksMenu.classList.remove('open');
+        }
+    });
+}
 
-    const mixed = colorA.clone().lerp(colorB, Math.random());
-    colors[i * 3]     = mixed.r;
-    colors[i * 3 + 1] = mixed.g;
-    colors[i * 3 + 2] = mixed.b;
-  }
+// ==========================================
+// 3. AUTO-FETCH LATEST VERSION FROM GITHUB
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('https://api.github.com/repos/adityasaini404/LumoStore/releases/latest')
+        .then(response => response.json())
+        .then(data => {
+            if (data.tag_name) {
+                document.getElementById('app-version').innerText = `${data.tag_name} · Now available`;
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching version:", error);
+            document.getElementById('app-version').innerText = "v1.1.0 · Now available";
+        });
+});
 
-  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+// ==========================================
+// 4. THREE.JS 3D BACKGROUND
+// ==========================================
+const canvas = document.getElementById('webgl-canvas');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 
-  const particleMat = new THREE.PointsMaterial({
-    size: 0.03,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.8,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  const particles = new THREE.Points(particleGeo, particleMat);
-  scene.add(particles);
-
-  // ---- TORUS KNOT (wireframe) ----
-  const torusGeo = new THREE.TorusKnotGeometry(1.4, 0.35, 120, 16);
-  const torusMat = new THREE.MeshBasicMaterial({
-    color: 0xA855F7,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.12
-  });
-  const torus = new THREE.Mesh(torusGeo, torusMat);
-  torus.position.set(2.5, -0.5, -3);
-  scene.add(torus);
-
-  // ---- SMALL FLOATING CUBES ----
-  const cubeGroup = new THREE.Group();
-  const cubeMat = new THREE.MeshBasicMaterial({
-    color: 0xEC4899,
+const geometry = new THREE.IcosahedronGeometry(3, 1);
+const material = new THREE.MeshBasicMaterial({
+    color: 0x7C3AED,
     wireframe: true,
     transparent: true,
     opacity: 0.15
-  });
-  for (let i = 0; i < 4; i++) {
-    const geo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-    const cube = new THREE.Mesh(geo, cubeMat);
-    cube.position.set(
-      (Math.random() - 0.5) * 8,
-      (Math.random() - 0.5) * 6,
-      (Math.random() - 0.5) * 5 - 2
-    );
-    cube.userData = {
-      speed: 0.3 + Math.random() * 0.5,
-      axis: Math.random() > 0.5 ? 'x' : 'y'
-    };
-    cubeGroup.add(cube);
-  }
-  scene.add(cubeGroup);
+});
+const icosahedron = new THREE.Mesh(geometry, material);
+scene.add(icosahedron);
 
-  // ---- MOUSE PARALLAX ----
-  let mouseX = 0, mouseY = 0;
-  let targetX = 0, targetY = 0;
+const particlesGeometry = new THREE.BufferGeometry();
+const particlesCount = 2000;
+const posArray = new Float32Array(particlesCount * 3);
+for (let i = 0; i < particlesCount * 3; i++) {
+    posArray[i] = (Math.random() - 0.5) * 30;
+}
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+const particlesMaterial = new THREE.PointsMaterial({
+    size: 0.03,
+    color: 0x2563EB,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending
+});
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
 
-  window.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-  });
+camera.position.z = 7;
 
-  // ---- SCROLL ----
-  let scrollY = 0;
-  window.addEventListener('scroll', () => {
-    scrollY = window.scrollY;
-  }, { passive: true });
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX / window.innerWidth - 0.5;
+    mouseY = e.clientY / window.innerHeight - 0.5;
+});
 
-  // ---- ANIMATION LOOP ----
-  const clock = new THREE.Clock();
-
-  function animate() {
+const clock = new THREE.Clock();
+function animate() {
     requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
 
-    targetX += (mouseX - targetX) * 0.05;
-    targetY += (mouseY - targetY) * 0.05;
+    icosahedron.rotation.y = t * 0.1;
+    icosahedron.rotation.x = t * 0.05;
+    particles.rotation.y = t * 0.05;
 
-    particles.rotation.y = t * 0.03;
-    particles.rotation.x = t * 0.015;
-
-    torus.rotation.x = t * 0.2;
-    torus.rotation.y = t * 0.3;
-    torus.position.y = -0.5 + Math.sin(t * 0.5) * 0.3;
-
-    cubeGroup.children.forEach((cube, i) => {
-      const speed = cube.userData.speed;
-      if (cube.userData.axis === 'x') cube.rotation.x = t * speed;
-      else cube.rotation.y = t * speed;
-      cube.position.y += Math.sin(t + i) * 0.002;
-    });
-
-    camera.position.x += (targetX * 0.6 - camera.position.x) * 0.05;
-    camera.position.y += (targetY * 0.6 - camera.position.y + scrollY * 0.001) * 0.05;
+    camera.position.x += (mouseX * 2 - camera.position.x) * 0.05;
+    camera.position.y += (-mouseY * 2 - camera.position.y) * 0.05;
     camera.lookAt(scene.position);
 
     renderer.render(scene, camera);
-  }
+}
+animate();
 
-  animate();
-
-  window.addEventListener('resize', () => {
+window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  });
-})();
+});
 
-// ======================================================
-// HERO ICON 3D TILT (follows mouse)
-// ======================================================
-(function heroIconTilt() {
-  const icon = document.getElementById('heroIcon');
-  if (!icon) return;
+// ==========================================
+// 5. CUSTOM CURSOR
+// ==========================================
+const cursorDot = document.querySelector('.cursor-dot');
+const cursorOutline = document.querySelector('.cursor-outline');
 
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
+window.addEventListener('mousemove', (e) => {
+    const posX = e.clientX;
+    const posY = e.clientY;
+    
+    cursorDot.style.left = `${posX}px`;
+    cursorDot.style.top = `${posY}px`;
+    
+    cursorOutline.animate({
+        left: `${posX}px`,
+        top: `${posY}px`
+    }, { duration: 500, fill: "forwards" });
+});
 
-  hero.addEventListener('mousemove', (e) => {
-    const rect = hero.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+const interactiveElements = document.querySelectorAll('.interactive');
+interactiveElements.forEach(el => {
+    el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
+});
 
-    const rotateY = x * 20;
-    const rotateX = -y * 20;
-
-    icon.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-  });
-
-  hero.addEventListener('mouseleave', () => {
-    icon.style.transform = '';
-  });
-})();
-
-// ======================================================
-// 3D TILT CARDS (features)
-// ======================================================
-(function tiltCards() {
-  document.querySelectorAll('[data-tilt]').forEach(card => {
-    const inner = card.querySelector('.tilt-inner');
-    if (!inner) return;
-
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const rotateY = ((x - centerX) / centerX) * 6;
-      const rotateX = ((centerY - y) / centerY) * 6;
-
-      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-
-      // Glare position
-      inner.style.setProperty('--mx', `${(x / rect.width) * 100}%`);
-      inner.style.setProperty('--my', `${(y / rect.height) * 100}%`);
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-    });
-  });
-})();
-
-// ======================================================
-// REVEAL ON SCROLL
-// ======================================================
-(function revealOnScroll() {
-  const elements = document.querySelectorAll('.reveal');
-  if (!elements.length) return;
-
-  const observer = new IntersectionObserver((entries) => {
+// ==========================================
+// 6. SCROLL REVEAL
+// ==========================================
+const revealElements = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            observer.unobserve(entry.target);
+        }
     });
-  }, { threshold: 0.1 });
+}, { threshold: 0.15 });
+revealElements.forEach(el => revealObserver.observe(el));
 
-  elements.forEach(el => observer.observe(el));
-})();
+// ==========================================
+// 7. BENTO GLOW EFFECT
+// ==========================================
+const bentoCards = document.querySelectorAll('.bento-card');
+bentoCards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+    });
+});
 
-// ======================================================
-// MOBILE MENU
-// ======================================================
-(function mobileMenu() {
-  const btn = document.getElementById('navMenuBtn');
-  const links = document.getElementById('navLinks');
-  if (!btn || !links) return;
+// ==========================================
+// 8. DRAG TO SCROLL (Screenshots)
+// ==========================================
+const slider = document.querySelector('.slider-track');
+if (slider) {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
 
-  btn.addEventListener('click', () => {
-    links.classList.toggle('open');
-  });
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2;
+        slider.scrollLeft = scrollLeft - walk;
+    });
+}
 
-  links.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => links.classList.remove('open'));
-  });
-})();
-
-// ======================================================
-// FOOTER YEAR
-// ======================================================
-(function setYear() {
-  const el = document.getElementById('year');
-  if (el) el.textContent = new Date().getFullYear();
-})();
-
-// ======================================================
-// NAV SHADOW ON SCROLL
-// ======================================================
-(function navShadow() {
-  const nav = document.querySelector('.nav');
-  if (!nav) return;
-
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 20) {
-      nav.style.boxShadow = '0 4px 24px rgba(0,0,0,0.3)';
-    } else {
-      nav.style.boxShadow = 'none';
-    }
-  }, { passive: true });
-})();
-
-console.log('%c Lumo Store ', 'background:#6366F1;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;', '3D website loaded');
+// Year
+document.getElementById('year').innerText = new Date().getFullYear();
