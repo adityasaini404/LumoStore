@@ -12,6 +12,7 @@ import com.lumo.store.data.GitHubApi
 import com.lumo.store.data.RateLimitException
 import com.lumo.store.data.RateLimitState
 import com.lumo.store.data.TokenManager
+import com.lumo.store.data.VersionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -185,7 +186,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     isInstalled = installed
 
                     if (installed && installedVersion != null) {
-                        isUpdateAvailable = isNewerVersion(installedVersion, version)
+                        isUpdateAvailable = VersionUtils.isNewerVersion(installedVersion, version)
                     }
                 }
 

@@ -1,5 +1,6 @@
 package com.lumo.store
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -57,6 +58,7 @@ import com.lumo.store.data.AppInfo
 import com.lumo.store.data.FavoritesManager
 import com.lumo.store.data.ThemeManager
 import com.lumo.store.data.UserProfileManager
+import com.lumo.store.data.VersionUtils
 import com.lumo.store.screens.AboutMeScreen
 import com.lumo.store.screens.AppDetailScreen
 import com.lumo.store.screens.SettingsScreen
@@ -108,6 +110,60 @@ fun LumoNavHost(
     val apps by viewModel.apps.collectAsState()
     val downloadState by downloadViewModel.downloadState.collectAsState()
     val context = LocalContext.current
+
+    // ✅ NEW: Auto-Update Check for Lumo Store
+    var showAppUpdateDialog by remember { mutableStateOf(false) }
+    var updateVersion by remember { mutableStateOf("") }
+    var updateUrl by remember { mutableStateOf("") }
+
+    // Get the currently installed version of Lumo Store
+    val currentVersion = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0"
+        } catch (e: Exception) {
+            "1.0"
+        }
+    }
+
+    LaunchedEffect(apps) {
+        if (apps.isNotEmpty()) {
+            // Find Lumo Store in the fetched apps list
+            val selfApp = apps.find { it.packageName == context.packageName || it.githubRepo.equals("adityasaini404/LumoStore", ignoreCase = true) }
+
+            if (selfApp != null && selfApp.version != "N/A") {
+                // Check if the remote version is newer than the installed version
+                if (VersionUtils.isNewerVersion(currentVersion, selfApp.version)) {
+                    updateVersion = selfApp.version
+                    // Fallback URL if the download URL is empty
+                    updateUrl = selfApp.downloadUrl.ifBlank { "https://github.com/adityasaini404/LumoStore/releases/latest/download/lumostore.apk" }
+                    showAppUpdateDialog = true
+                }
+            }
+        }
+    }
+
+    // Show the dialog if an update is available
+    if (showAppUpdateDialog) {
+        AlertDialog(
+            onDismissRequest = { showAppUpdateDialog = false },
+            icon = { Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp)) },
+            title = { Text("Update Available 🚀", fontWeight = FontWeight.Bold) },
+            text = { Text("A new version of Lumo Store ($updateVersion) is available. Update now to get the latest features and bug fixes!") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAppUpdateDialog = false
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(updateUrl)))
+                    } catch (e: Exception) {
+                        android.widget.Toast.makeText(context, "Could not open browser", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Update Now", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAppUpdateDialog = false }) { Text("Later") }
+            }
+        )
+    }
 
     var showSplash by remember { mutableStateOf(true) }
 

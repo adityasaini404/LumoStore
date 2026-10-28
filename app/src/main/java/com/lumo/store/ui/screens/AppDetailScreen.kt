@@ -2,6 +2,7 @@ package com.lumo.store.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -50,7 +51,6 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.lumo.store.data.ApkVariant
 import com.lumo.store.data.AppInfo
 
-// Custom GitHub logo
 private val GitHubIcon: ImageVector by lazy {
     val nodes = PathParser().parsePathString(
         "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 " +
@@ -85,10 +85,8 @@ private fun formatDownloads(count: Long): String = when {
 }
 
 private fun archIconFor(arch: String): ImageVector = when (arch) {
-    "arm64-v8a" -> Icons.Default.Memory
-    "armeabi-v7a" -> Icons.Default.Memory
-    "x86_64" -> Icons.Default.Computer
-    "x86" -> Icons.Default.Computer
+    "arm64-v8a", "armeabi-v7a" -> Icons.Default.Memory
+    "x86_64", "x86" -> Icons.Default.Computer
     else -> Icons.Default.Android
 }
 
@@ -112,6 +110,7 @@ fun AppDetailScreen(
     var isReleaseNotesExpanded by remember { mutableStateOf(false) }
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
     var showDownloadDialog by remember { mutableStateOf(false) }
+    var showVariantMenu by remember { mutableStateOf(false) }
 
     var selectedVariant by remember(app.id) {
         mutableStateOf<ApkVariant?>(null)
@@ -126,7 +125,7 @@ fun AppDetailScreen(
 
     var startAnim by remember { mutableStateOf(false) }
     val headerScale by animateFloatAsState(
-        targetValue = if (startAnim) 1f else 0.75f,
+        targetValue = if (startAnim) 1f else 0.92f,
         animationSpec = tween(400, easing = FastOutSlowInEasing),
         label = "header_scale"
     )
@@ -144,11 +143,12 @@ fun AppDetailScreen(
     val secondaryColor = MaterialTheme.colorScheme.secondary
 
     val hasMultipleVariants = app.variants.size > 1
+    val isOpen = app.isInstalled && !app.isUpdateAvailable
 
     Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().statusBarsPadding(),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            contentPadding = PaddingValues(bottom = 40.dp)
         ) {
             // ---------- TOP BAR ----------
             item {
@@ -158,10 +158,10 @@ fun AppDetailScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
-                            .background(surfaceColor)
-                            .border(1.dp, textColor.copy(alpha = 0.09f), CircleShape)
+                            .background(textColor.copy(alpha = 0.08f))
+                            .border(1.dp, textColor.copy(alpha = 0.1f), CircleShape)
                             .clickable { onBack() },
                         contentAlignment = Alignment.Center
                     ) {
@@ -196,7 +196,8 @@ fun AppDetailScreen(
                             .clickable {
                                 val txt = buildString {
                                     append("Check out ${app.name}")
-                                    if (app.version.isNotBlank() && app.version != "N/A") append(" (${formatVersion(app.version)})")
+                                    if (app.version.isNotBlank() && app.version != "N/A")
+                                        append(" (${formatVersion(app.version)})")
                                     append(" on Lumo Store!")
                                     if (app.repoUrl.isNotBlank()) append("\n\n${app.repoUrl}")
                                 }
@@ -214,33 +215,34 @@ fun AppDetailScreen(
                 }
             }
 
-            // ---------- PREMIUM HEADER CARD ----------
+            // ---------- HEADER CARD WITH ACTIONS ----------
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 10.dp)
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
                         .scale(headerScale)
                         .alpha(headerAlpha)
-                        .clip(RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(24.dp))
                         .background(
                             Brush.linearGradient(
                                 listOf(
-                                    primaryColor.copy(alpha = 0.18f),
-                                    secondaryColor.copy(alpha = 0.07f)
+                                    primaryColor.copy(alpha = 0.15f),
+                                    secondaryColor.copy(alpha = 0.10f)
                                 )
                             )
                         )
-                        .border(1.dp, primaryColor.copy(alpha = 0.18f), RoundedCornerShape(28.dp))
-                        .padding(20.dp)
+                        .border(1.dp, primaryColor.copy(alpha = 0.20f), RoundedCornerShape(24.dp))
+                        .padding(18.dp)
                 ) {
                     Column {
+                        // App info row
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(88.dp)
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .border(1.dp, primaryColor.copy(alpha = 0.28f), RoundedCornerShape(24.dp))
+                                    .size(86.dp)
+                                    .clip(RoundedCornerShape(22.dp))
+                                    .border(2.dp, primaryColor.copy(alpha = 0.3f), RoundedCornerShape(22.dp))
                             ) {
                                 SubcomposeAsyncImage(
                                     model = app.icon,
@@ -286,90 +288,231 @@ fun AppDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
 
-                        // Main Action Button
-                        val btnText = when {
-                            app.isUpdateAvailable -> "Update to ${formatVersion(app.version)}"
-                            app.isInstalled -> "Open"
-                            else -> "Install App"
-                        }
-                        val isOpen = app.isInstalled && !app.isUpdateAvailable
+                        // ========================================
+                        // TWO BUTTONS: Install + Variant Dropdown
+                        // ========================================
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Main Install/Open/Update button
+                            val btnText = when {
+                                app.isUpdateAvailable -> "Update"
+                                app.isInstalled -> "Open"
+                                else -> "Install"
+                            }
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(
-                                    if (isOpen) 0.dp else 8.dp,
-                                    RoundedCornerShape(16.dp),
-                                    ambientColor = primaryColor,
-                                    spotColor = primaryColor
-                                )
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (isOpen)
-                                        SolidColor(textColor.copy(alpha = 0.10f))
-                                    else
-                                        Brush.horizontalGradient(listOf(primaryColor, secondaryColor))
-                                )
-                                .clickable {
-                                    when {
-                                        isOpen -> {
-                                            if (app.packageName.isBlank()) {
-                                                android.widget.Toast.makeText(context, "No package name", android.widget.Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                val intent = context.packageManager.getLaunchIntentForPackage(app.packageName)
-                                                if (intent != null) {
-                                                    try {
-                                                        context.startActivity(intent)
-                                                    } catch (e: Exception) {
-                                                        android.widget.Toast.makeText(context, "Cannot open app", android.widget.Toast.LENGTH_SHORT).show()
-                                                    }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp)
+                                    .shadow(
+                                        if (isOpen) 0.dp else 12.dp,
+                                        RoundedCornerShape(16.dp),
+                                        ambientColor = primaryColor,
+                                        spotColor = primaryColor
+                                    )
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (isOpen)
+                                            SolidColor(textColor.copy(alpha = 0.10f))
+                                        else
+                                            Brush.horizontalGradient(listOf(primaryColor, secondaryColor))
+                                    )
+                                    .clickable {
+                                        when {
+                                            isOpen -> {
+                                                if (app.packageName.isBlank()) {
+                                                    Toast.makeText(context, "No package name", Toast.LENGTH_SHORT).show()
                                                 } else {
-                                                    android.widget.Toast.makeText(context, "App installed but cannot open", android.widget.Toast.LENGTH_SHORT).show()
+                                                    val intent = context.packageManager.getLaunchIntentForPackage(app.packageName)
+                                                    if (intent != null) {
+                                                        try {
+                                                            context.startActivity(intent)
+                                                        } catch (e: Exception) {
+                                                            Toast.makeText(context, "Cannot open app", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    } else {
+                                                        Toast.makeText(context, "App installed but cannot open", Toast.LENGTH_SHORT).show()
+                                                    }
                                                 }
                                             }
+                                            app.downloadUrl.isBlank() && app.variants.isEmpty() -> {
+                                                Toast.makeText(context, "Download not available", Toast.LENGTH_SHORT).show()
+                                            }
+                                            else -> showDownloadDialog = true
                                         }
-                                        app.downloadUrl.isBlank() && app.variants.isEmpty() -> {
-                                            android.widget.Toast.makeText(context, "Download not available", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = when {
+                                            app.isUpdateAvailable -> Icons.Default.SystemUpdate
+                                            isOpen -> Icons.Default.OpenInNew
+                                            else -> Icons.Default.Download
+                                        },
+                                        contentDescription = null,
+                                        tint = if (isOpen) textColor else Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        btnText,
+                                        color = if (isOpen) textColor else Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            // Variant dropdown (only if multiple variants)
+                            if (hasMultipleVariants) {
+                                Box {
+                                    // The dropdown trigger button
+                                    Row(
+                                        modifier = Modifier
+                                            .height(56.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(surfaceColor)
+                                            .border(1.dp, primaryColor.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
+                                            .clickable { showVariantMenu = true }
+                                            .padding(horizontal = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = archIconFor(selectedVariant?.arch ?: "universal"),
+                                            contentDescription = null,
+                                            tint = primaryColor,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            archShortLabel(selectedVariant?.arch ?: "universal"),
+                                            color = textColor,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Icon(
+                                            Icons.Default.ArrowDropDown,
+                                            contentDescription = "Select variant",
+                                            tint = textColor.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    // Dropdown menu
+                                    DropdownMenu(
+                                        expanded = showVariantMenu,
+                                        onDismissRequest = { showVariantMenu = false },
+                                        modifier = Modifier
+                                            .background(surfaceColor)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .border(1.dp, textColor.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                                            .widthIn(min = 220.dp)
+                                    ) {
+                                        Text(
+                                            "Choose Architecture",
+                                            color = textColor.copy(alpha = 0.6f),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                        )
+                                        HorizontalDivider(color = textColor.copy(alpha = 0.06f))
+
+                                        app.variants.forEach { variant ->
+                                            val isSelected = selectedVariant?.filename == variant.filename
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(32.dp)
+                                                                .clip(RoundedCornerShape(10.dp))
+                                                                .background(
+                                                                    if (isSelected) primaryColor.copy(alpha = 0.15f)
+                                                                    else textColor.copy(alpha = 0.06f)
+                                                                ),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(
+                                                                archIconFor(variant.arch),
+                                                                null,
+                                                                tint = if (isSelected) primaryColor else textColor.copy(alpha = 0.6f),
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.width(10.dp))
+                                                        Column(Modifier.weight(1f)) {
+                                                            Text(
+                                                                archShortLabel(variant.arch),
+                                                                color = if (isSelected) primaryColor else textColor,
+                                                                fontSize = 13.sp,
+                                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
+                                                            )
+                                                            Text(
+                                                                variant.sizeFormatted.ifBlank { "Unknown size" },
+                                                                color = textColor.copy(alpha = 0.55f),
+                                                                fontSize = 10.sp
+                                                            )
+                                                        }
+                                                        if (isSelected) {
+                                                            Icon(
+                                                                Icons.Default.Check,
+                                                                null,
+                                                                tint = primaryColor,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                onClick = {
+                                                    selectedVariant = variant
+                                                    showVariantMenu = false
+                                                }
+                                            )
                                         }
-                                        else -> showDownloadDialog = true
                                     }
                                 }
-                                .padding(vertical = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = when {
-                                        app.isUpdateAvailable -> Icons.Default.SystemUpdate
-                                        isOpen -> Icons.Default.OpenInNew
-                                        else -> Icons.Default.Download
-                                    },
-                                    contentDescription = null,
-                                    tint = if (isOpen) textColor else Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    btnText,
-                                    color = if (isOpen) textColor else Color.White,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
                             }
                         }
 
-                        // Download available variants info
-                        if (hasMultipleVariants) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                        // Selected variant info (if multiple)
+                        if (hasMultipleVariants && selectedVariant != null) {
+                            Spacer(modifier = Modifier.height(10.dp))
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(primaryColor.copy(alpha = 0.08f))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    null,
+                                    tint = primaryColor,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "${app.variants.size} variants available",
-                                    color = textColor.copy(alpha = 0.6f),
+                                    buildString {
+                                        append("Selected: ")
+                                        append(archShortLabel(selectedVariant!!.arch))
+                                        if (selectedVariant!!.sizeFormatted.isNotBlank()) {
+                                            append(" · ")
+                                            append(selectedVariant!!.sizeFormatted)
+                                        }
+                                    },
+                                    color = textColor.copy(alpha = 0.75f),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -384,11 +527,11 @@ fun AppDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(20.dp))
                         .background(surfaceColor)
-                        .border(1.dp, textColor.copy(alpha = 0.08f), RoundedCornerShape(22.dp))
-                        .padding(vertical = 18.dp),
+                        .border(1.dp, textColor.copy(alpha = 0.06f), RoundedCornerShape(20.dp))
+                        .padding(vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -402,7 +545,7 @@ fun AppDetailScreen(
                     StatVerticalDivider(textColor)
                     StatItem(
                         icon = Icons.Default.Storage,
-                        value = app.size.ifBlank { "N/A" },
+                        value = (selectedVariant?.sizeFormatted?.ifBlank { null } ?: app.size).ifBlank { "N/A" },
                         label = "Size",
                         color = secondaryColor,
                         textColor = textColor
@@ -418,94 +561,10 @@ fun AppDetailScreen(
                 }
             }
 
-            // ---------- MODERN VARIANTS SECTION ----------
-            if (hasMultipleVariants) {
-                item {
-                    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(primaryColor.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Memory,
-                                    null,
-                                    tint = primaryColor,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                "Available Variants",
-                                color = textColor,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .background(primaryColor.copy(alpha = 0.12f))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    "${app.variants.size} options",
-                                    color = primaryColor,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            app.variants.forEach { variant ->
-                                VariantCard(
-                                    variant = variant,
-                                    isSelected = selectedVariant?.filename == variant.filename,
-                                    primaryColor = primaryColor,
-                                    secondaryColor = secondaryColor,
-                                    surfaceColor = surfaceColor,
-                                    textColor = textColor,
-                                    onClick = { selectedVariant = variant }
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFFF59E0B).copy(alpha = 0.10f))
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Info,
-                                null,
-                                tint = Color(0xFFF59E0B),
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                "Choose the variant that matches your device's CPU architecture for best compatibility.",
-                                color = textColor.copy(alpha = 0.7f),
-                                fontSize = 10.sp,
-                                lineHeight = 14.sp
-                            )
-                        }
-                    }
-                }
-            }
-
             // ---------- SCREENSHOTS ----------
             if (app.screenshots.isNotEmpty()) {
                 item {
-                    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                    Column(modifier = Modifier.padding(vertical = 16.dp)) {
                         Row(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -543,9 +602,9 @@ fun AppDetailScreen(
                                     contentDescription = "Screenshot",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(width = 216.dp, height = 384.dp)
-                                        .clip(RoundedCornerShape(22.dp))
-                                        .border(1.dp, textColor.copy(alpha = 0.10f), RoundedCornerShape(22.dp))
+                                        .size(width = 210.dp, height = 380.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .border(1.dp, textColor.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
                                         .clickable { selectedImageUrl = url },
                                     loading = { Box(Modifier.fillMaxSize().background(textColor.copy(alpha = 0.05f))) },
                                     error = { Box(Modifier.fillMaxSize().background(textColor.copy(alpha = 0.05f))) }
@@ -560,7 +619,7 @@ fun AppDetailScreen(
             item {
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
                         .background(surfaceColor)
@@ -739,8 +798,7 @@ fun AppDetailScreen(
                                     "Tap to see full changelog",
                                     color = primaryColor,
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.clickable { isReleaseNotesExpanded = true }
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -785,7 +843,7 @@ fun AppDetailScreen(
             }
         }
 
-        // ---------- REDESIGNED DOWNLOAD DIALOG ----------
+        // ---------- DOWNLOAD CONFIRMATION DIALOG (SIMPLIFIED) ----------
         if (showDownloadDialog) {
             Dialog(onDismissRequest = { showDownloadDialog = false }) {
                 Box(
@@ -844,134 +902,64 @@ fun AppDetailScreen(
                             }
                         }
 
-                        // Variant picker (if multiple)
-                        if (hasMultipleVariants) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.Memory,
-                                        null,
-                                        tint = primaryColor,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        "Choose variant",
-                                        color = textColor,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                app.variants.forEach { variant ->
-                                    val isSel = selectedVariant?.filename == variant.filename
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 3.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(
-                                                if (isSel) primaryColor.copy(alpha = 0.12f)
-                                                else textColor.copy(alpha = 0.04f)
-                                            )
-                                            .border(
-                                                1.dp,
-                                                if (isSel) primaryColor.copy(alpha = 0.4f)
-                                                else Color.Transparent,
-                                                RoundedCornerShape(12.dp)
-                                            )
-                                            .clickable { selectedVariant = variant }
-                                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        RadioButton(
-                                            selected = isSel,
-                                            onClick = { selectedVariant = variant },
-                                            colors = RadioButtonDefaults.colors(
-                                                selectedColor = primaryColor,
-                                                unselectedColor = textColor.copy(alpha = 0.4f)
-                                            )
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Column(Modifier.weight(1f)) {
-                                            Text(
-                                                variant.archLabel,
-                                                color = textColor,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text(
-                                                variant.sizeFormatted.ifBlank { "Unknown size" },
-                                                color = textColor.copy(alpha = 0.55f),
-                                                fontSize = 11.sp
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(20.dp))
-                        } else {
-                            Spacer(modifier = Modifier.height(20.dp))
-                        }
-
-                        // Selected info summary
+                        // Selected variant summary
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(textColor.copy(alpha = 0.04f))
-                                .padding(12.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(primaryColor.copy(alpha = 0.06f))
+                                .border(1.dp, primaryColor.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
+                                .padding(14.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(primaryColor.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = archIconFor(selectedVariant?.arch ?: "universal"),
+                                        contentDescription = null,
+                                        tint = primaryColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
                                     Text(
-                                        "File size",
-                                        color = textColor.copy(alpha = 0.5f),
-                                        fontSize = 10.sp
+                                        selectedVariant?.archLabel ?: "Universal APK",
+                                        color = textColor,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         selectedVariant?.sizeFormatted?.ifBlank { null }
-                                            ?: app.size.ifBlank { "Unknown" },
-                                        color = textColor,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
+                                            ?: app.size.ifBlank { "Unknown size" },
+                                        color = textColor.copy(alpha = 0.55f),
+                                        fontSize = 11.sp
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        "Architecture",
-                                        color = textColor.copy(alpha = 0.5f),
-                                        fontSize = 10.sp
-                                    )
-                                    Text(
-                                        selectedVariant?.archLabel ?: "Auto",
-                                        color = textColor,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                Text(
+                                    "Selected",
+                                    color = primaryColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // BUTTONS — clearly visible, large
+                        // BUTTONS
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                                .padding(horizontal = 20.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            // Cancel button
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -990,7 +978,6 @@ fun AppDetailScreen(
                                 )
                             }
 
-                            // Download button
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -1035,133 +1022,6 @@ fun AppDetailScreen(
 // ========================================
 
 @Composable
-private fun VariantCard(
-    variant: ApkVariant,
-    isSelected: Boolean,
-    primaryColor: Color,
-    secondaryColor: Color,
-    surfaceColor: Color,
-    textColor: Color,
-    onClick: () -> Unit
-) {
-    val bgBrush = if (isSelected)
-        Brush.horizontalGradient(listOf(primaryColor, secondaryColor))
-    else
-        Brush.horizontalGradient(listOf(surfaceColor, surfaceColor))
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(bgBrush)
-            .border(
-                width = if (isSelected) 0.dp else 1.dp,
-                color = if (isSelected) Color.Transparent else textColor.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 15.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Arch icon
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    if (isSelected) Color.White.copy(alpha = 0.2f)
-                    else primaryColor.copy(alpha = 0.12f)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = archIconFor(variant.arch),
-                contentDescription = null,
-                tint = if (isSelected) Color.White else primaryColor,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    archShortLabel(variant.arch),
-                    color = if (isSelected) Color.White else textColor,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                if (isSelected) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White.copy(alpha = 0.25f))
-                            .padding(horizontal = 6.dp, vertical = 1.dp)
-                    ) {
-                        Text(
-                            "SELECTED",
-                            color = Color.White,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Storage,
-                    null,
-                    tint = if (isSelected) Color.White.copy(alpha = 0.7f) else textColor.copy(alpha = 0.5f),
-                    modifier = Modifier.size(10.dp)
-                )
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    variant.sizeFormatted.ifBlank { "Unknown" },
-                    color = if (isSelected) Color.White.copy(alpha = 0.8f) else textColor.copy(alpha = 0.55f),
-                    fontSize = 11.sp
-                )
-                if (variant.downloadCount > 0) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.Download,
-                        null,
-                        tint = if (isSelected) Color.White.copy(alpha = 0.7f) else textColor.copy(alpha = 0.5f),
-                        modifier = Modifier.size(10.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        formatDownloads(variant.downloadCount),
-                        color = if (isSelected) Color.White.copy(alpha = 0.8f) else textColor.copy(alpha = 0.55f),
-                        fontSize = 11.sp
-                    )
-                }
-            }
-        }
-
-        // Check
-        if (isSelected) {
-            Icon(
-                Icons.Default.CheckCircle,
-                "Selected",
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .border(1.5.dp, textColor.copy(alpha = 0.25f), CircleShape)
-            )
-        }
-    }
-}
-
-@Composable
 private fun StatItem(
     icon: ImageVector,
     value: String,
@@ -1196,9 +1056,9 @@ private fun LinkCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(surfaceColor)
-            .border(1.dp, textColor.copy(alpha = 0.07f), RoundedCornerShape(22.dp))
+            .border(1.dp, textColor.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
             .clickable { onClick() }
             .padding(18.dp),
         verticalAlignment = Alignment.CenterVertically
